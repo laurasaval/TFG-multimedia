@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { healthRouter } from "../api/routes/health.routes.js";
+import { authRouter } from "../api/routes/auth.routes.js";
 
 export function createExpressApp() {
     const app = express();
@@ -10,6 +11,7 @@ export function createExpressApp() {
     app.use(express.urlencoded({ extended: true }));
 
     app.use('/', healthRouter);
+    app.use('/api/auth', authRouter);
 
     return app;
 }

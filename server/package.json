@@ -23,7 +23,10 @@
     "dev": "nodemon src/index.js",
     "dev:es": "nodemon scripts/start-country.js es",
     "dev:fr": "nodemon scripts/start-country.js fr",
-    "dev:de": "nodemon scripts/start-country.js de"
+    "dev:de": "nodemon scripts/start-country.js de",
+    "seed:es": "node scripts/seed-voter.js es",
+    "seed:fr": "node scripts/seed-voter.js fr",
+    "seed:de": "node scripts/seed-voter.js de"
   },
   "dependencies": {
     "cors": "^2.8.6",
