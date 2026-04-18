@@ -1,0 +1,15 @@
+<main class="login-container">
+    <h2>Inicio de Sesión</h2>
+    <form (ngSubmit)="onSubmit()">
+        <div class="form-group">
+            <label for="voterId">ID de Votante</label>
+            <input type="text" id="voterId" [(ngModel)]="voterId" name="voterId" required>
+        </div>
+        <div class="form-group">
+            <label for="secretCode">Código Secreto</label>
+            <input type="password" id="secretCode" [(ngModel)]="secretCode" name="secretCode" required>
+        </div>
+        <button type="submit" [disabled]="loading">{{ loading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</button>
+        <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+    </form>
+</main>
