@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { connectToDatabase, disconnectFromDatabase } from "../src/data/database.js";
 import { VoterModel } from "../src/models/voter.model.js";
+import { hashSecretCode } from "../src/crypto/hashing/argon2id.js";
 
 const country = process.argv[2];
 
@@ -18,9 +19,11 @@ if (result.error) {
 
 async function createVoter() {
     await connectToDatabase(String(process.env.DATABASE_URI));
+    const hashedSecretCode = await hashSecretCode("123456");
+
     const voter = new VoterModel({
         voterId: `${country}-12345678`,
-        secretCode: "123456",
+        secretCode: hashedSecretCode,
         identityPublicKey: "12345678",
         token: []
     });

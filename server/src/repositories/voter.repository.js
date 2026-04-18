@@ -1,9 +1,5 @@
 import { VoterModel } from "../models/voter.model.js";
 
-export async function findVoterByCredentials(voterId, secretCode) {
-    return await VoterModel.findOne({ voterId, secretCode });
-}
-
 export async function findVoterById(voterId) {
     return await VoterModel.findOne({ voterId });
 }

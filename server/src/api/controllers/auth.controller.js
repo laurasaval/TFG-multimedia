@@ -8,6 +8,7 @@ export async function loginController(req, res) {
         if (!result.ok) {
             return res.status(401).json(result);
         }
+
         return res.status(200).json(result);
     } catch (error) {
         return res.status(500).json({ ok: false, message: "Error interno del servidor" });
