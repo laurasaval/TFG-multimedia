@@ -1,3 +1,17 @@
+import { VoteToken } from "./token.models";
+
+export interface Voter {
+    voterId: string;
+    identityPublicKey: string;
+    token: VoteToken[];
+}
+
+export interface Session {
+    sessionToken: string;
+    createdAt: string;
+    expiresAt: string;
+}
+
 export interface LoginRequest {
     voterId: string;
     secretCode: string;
@@ -6,14 +20,6 @@ export interface LoginRequest {
 export interface LoginResponse {
     ok: boolean;
     message: string;
-    voter: {
-        voterId: string;
-        identityPublicKey: string;
-        token: string[];
-    };
-    session: {
-        sessionToken: string;
-        createdAt: string;
-        expiresAt: string;
-    };
+    voter: Voter;
+    session: Session;
 }

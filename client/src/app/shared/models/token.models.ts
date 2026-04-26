@@ -23,3 +23,7 @@ export interface VoteTokenResponse {
     token: VoteToken;
 }
 
+export interface VoteKeyPair {
+    publicKey: string;
+    privateKey: string;
+}

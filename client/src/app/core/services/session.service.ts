@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { Session } from "../../shared/models/auth.models";
 
 @Injectable({
     providedIn: "root"
@@ -6,7 +7,7 @@ import { Injectable } from "@angular/core";
 export class SessionService {
     private readonly storageKey: string = "tfg_session";
 
-    setSession(session: unknown): void {
+    setSession(session: Session): void {
         localStorage.setItem(this.storageKey, JSON.stringify(session));
     }
 
