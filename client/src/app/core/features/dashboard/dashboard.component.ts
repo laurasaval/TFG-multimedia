@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 import { VotingConfig } from '../../../shared/models/voting-config.models';
-import { VotePlain } from '../../../shared/models/vote.model';
+import { VotePlain, VoteEncrypted } from '../../../shared/models/vote.model';
 
 import { VotingConfigService } from '../../services/voting-config.service';
 import { VoteService } from '../../services/vote.service';
@@ -24,6 +24,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   selectedCountries: string[] = [];
   votePlain: VotePlain | null = null;
+  encryptedVote: VoteEncrypted | null = null;
+  symmetricKey: string | null = null;
 
   countdownText = "";
   private intervalId: number | null = null;
@@ -119,7 +121,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  prepareVotePlain(): void {
+  async prepareVote(): Promise<void> {
     try {
       this.errorMessage = "";
       this.successMessage = "";
@@ -129,6 +131,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
 
       this.votePlain = this.voteService.prepareVotePlain(this.selectedCountries);
+      [this.encryptedVote, this.symmetricKey] = await this.voteService.encryptVote(this.votePlain);
+
       this.successMessage = "Voto preparado correctamente";
     } catch (error: any) {
       this.errorMessage = error?.message ?? "No se pudo preparar el voto";

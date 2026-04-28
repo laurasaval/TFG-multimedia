@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { arrayBufferToBase64, base64ToArrayBuffer } from "../utils/base64.util";
 
 @Injectable({
     providedIn: 'root'
@@ -6,7 +7,7 @@ import { Injectable } from "@angular/core";
 export class WebCryptoEd25519Service {
     async importPublicKeyFromPem(pem: string): Promise<CryptoKey> {
         const cleanPem = this.strimPemHeaders(pem);
-        const binary = this.base64ToArrayBuffer(cleanPem);
+        const binary = base64ToArrayBuffer(cleanPem);
 
         return await crypto.subtle.importKey(
             'spki',
@@ -19,7 +20,7 @@ export class WebCryptoEd25519Service {
 
     async importPrivateKeyFromPem(pem: string): Promise<CryptoKey> {
         const cleanPem = this.strimPemHeaders(pem);
-        const binary = this.base64ToArrayBuffer(cleanPem);
+        const binary = base64ToArrayBuffer(cleanPem);
 
         return await crypto.subtle.importKey(
             'pkcs8',
@@ -40,14 +41,14 @@ export class WebCryptoEd25519Service {
 
     async exportPublicKeyToPem(publicKey: CryptoKey): Promise<string> {
         const skpi = await crypto.subtle.exportKey('spki', publicKey);
-        const base64 = this.arrayBufferToBase64(skpi);
+        const base64 = arrayBufferToBase64(skpi);
 
         return this.wrapPem(base64, 'PUBLIC KEY');
     }
 
     async exportPrivateKeyToPem(privateKey: CryptoKey): Promise<string> {
         const pkcs8 = await crypto.subtle.exportKey('pkcs8', privateKey);
-        const base64 = this.arrayBufferToBase64(pkcs8);
+        const base64 = arrayBufferToBase64(pkcs8);
 
         return this.wrapPem(base64, 'PRIVATE KEY');
     }
@@ -59,11 +60,11 @@ export class WebCryptoEd25519Service {
             new TextEncoder().encode(data)
         );
 
-        return this.arrayBufferToBase64(signature);
+        return arrayBufferToBase64(signature);
     }
 
     async verifySignature(publicKey: CryptoKey, data: string, signature: string): Promise<boolean> {
-        const signatureBuffer = this.base64ToArrayBuffer(signature);
+        const signatureBuffer = base64ToArrayBuffer(signature);
         const dataBuffer = new TextEncoder().encode(data);
 
         return await crypto.subtle.verify(
@@ -81,29 +82,6 @@ export class WebCryptoEd25519Service {
         }
 
         return `-----BEGIN ${label}-----\n${lines.join('\n')}\n-----END ${label}-----`;
-    }
-
-    private arrayBufferToBase64(buffer: ArrayBuffer): string {
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-
-        bytes.forEach((byte) => {
-            binary += String.fromCharCode(byte);
-        });
-
-        return btoa(binary);
-    }
-
-
-    private base64ToArrayBuffer(base64: string): ArrayBuffer {
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-
-        for (let i = 0; i < binary.length; i++) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-
-        return bytes.buffer;
     }
 
     private strimPemHeaders(pem: string): string {
