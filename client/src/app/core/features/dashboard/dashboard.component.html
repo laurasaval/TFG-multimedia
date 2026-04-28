@@ -1,1 +1,87 @@
 <button (click)="onLogout()">Cerrar sesión</button>
+
+<!-- <main>
+    <h2>Elige a tus favoritos</h2>
+    <p>Puedes votar tantas canciones como quieras. Tu voto será anónimo.</p>
+
+    <div *ngIf="loadingConfig">Cargando votación...</div>
+
+    <div *ngIf="votingState === 'closed'">
+        La votación ha finalizado
+    </div>
+
+    <div *ngIf="votingState === 'not-started'">
+        La votación comienza en:
+        <div>{{ countdownText }}</div>
+    </div>
+
+    <div *ngIf="votingState === 'open'">
+        La votación está abierta
+        <div>{{ countdownText }}</div>
+    </div>
+
+    <section *ngIf="votingState === 'open'">
+        <div *ngFor="let country of voting?.candidates">
+            <label>
+                <input
+                    type="checkbox"
+                    (change)="onCountrySelectionChange(country.countryCode, $event)"
+                    [checked]="selectedCountries.includes(country.countryCode)"
+                >
+                {{ country.countryName }}
+            </label>
+        </div>
+    </section>
+</main> -->
+
+
+<main class="dashboard-container">
+    <h2>Panel de votación</h2>
+
+    <div *ngIf="loading">
+        Cargando votación...
+    </div>
+
+    <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+    </div>
+
+    <section *ngIf="voting">
+        <h3>{{ voting.title }}</h3>
+        <p>Edición: {{ voting.editionCode }}</p>
+
+        <ng-container [ngSwitch]="votingState">
+            <div *ngSwitchCase="'not-started'" class="info-message">
+                <p>La votación todavía no ha comenzado.</p>
+                <p>Tiempo restante: <strong>{{ countdownText }}</strong></p>
+            </div>
+
+            <div *ngSwitchCase="'closed'" class="info-message">
+                <p>La votación de esta edición ya ha finalizado.</p>
+                <p>Te esperamos para la próxima edición.</p>
+            </div>
+
+            <form *ngSwitchCase="'started'">
+                <fieldset>
+                    <legend>Selecciona los países aprobados</legend>
+
+                    <div class="country-option" *ngFor="let candidate of voting.candidates">
+                        <label>
+                            <input type="checkbox" [value]="candidate.countryCode"
+                                (change)="onCountrySelectionChange(candidate.countryCode, $event)" />
+                            {{ candidate.countryName }} ({{ candidate.countryCode }})
+                        </label>
+                    </div>
+                </fieldset>
+
+                <button type="button" (click)="prepareVotePlain()">
+                    Preparar voto
+                </button>
+            </form>
+        </ng-container>
+    </section>
+
+    <div *ngIf="successMessage" class="success-message">
+        {{ successMessage }}
+    </div>
+</main>

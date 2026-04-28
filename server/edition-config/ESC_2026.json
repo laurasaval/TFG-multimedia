@@ -1,0 +1,28 @@
+{
+    "editionCode": "ESC_2026",
+    "title": "Eurovision Song Contest Vienna 2026",
+    "votingStart": "2026-05-16T18:00:00Z",
+    "votingEnd": "2026-05-16T23:00:00Z",
+    "candidates": [
+        {
+            "countryCode": "ES",
+            "countryName": "España"
+        },
+        {
+            "countryCode": "FR",
+            "countryName": "Francia"
+        },
+        {
+            "countryCode": "DE",
+            "countryName": "Alemania"
+        },
+        {
+            "countryCode": "IT",
+            "countryName": "Italia"
+        },
+        {
+            "countryCode": "PT",
+            "countryName": "Portugal"
+        }
+    ]
+}

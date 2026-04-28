@@ -24,12 +24,16 @@
     "dev:es": "nodemon scripts/start-country.js es",
     "dev:fr": "nodemon scripts/start-country.js fr",
     "dev:de": "nodemon scripts/start-country.js de",
-    "seed:es": "node scripts/seed-voter.js es",
-    "seed:fr": "node scripts/seed-voter.js fr",
-    "seed:de": "node scripts/seed-voter.js de",
+    "seed-voters:es": "node scripts/seed-voter.js es",
+    "seed:fr-voters": "node scripts/seed-voter.js fr",
+    "seed:de-voters": "node scripts/seed-voter.js de",
     "keys:es": "node scripts/generate-country-keys.js es",
     "keys:fr": "node scripts/generate-country-keys.js fr",
-    "keys:de": "node scripts/generate-country-keys.js de"
+    "keys:de": "node scripts/generate-country-keys.js de",
+    "seed-voting:es": "node scripts/seed-voting-config.js es",
+    "seed-voting:fr": "node scripts/seed-voting-config.js fr",
+    "seed-voting:de": "node scripts/seed-voting-config.js de",
+    "seed-voting:all": "node scripts/seed-voting-config-all.js"
   },
   "dependencies": {
     "argon2": "^0.44.0",

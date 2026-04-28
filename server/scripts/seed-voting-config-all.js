@@ -1,0 +1,16 @@
+import { spawnSync } from "child_process";
+
+const countries = ["es", "fr", "de"];
+
+for (const country of countries) {
+    const result = spawnSync(
+        process.execPath,
+        ["scripts/seed-voting-config.js", country],
+        {
+            stdio: "inherit",
+            shell: false
+        }
+    );
+
+    console.log("Configuración lista en todos los países");
+}
