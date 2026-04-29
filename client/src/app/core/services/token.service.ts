@@ -4,7 +4,7 @@ import { firstValueFrom } from "rxjs";
 
 import { API_CONFIG } from "../config/api.config";
 
-import { VoteKeyService } from "./vote-key.service";
+import { VoterKeyService } from "./voter-key.service";
 import { IdentityKeyService } from "./identity-key.service";
 import { WebCryptoEd25519Service } from "./web-crypto-ed25519.service";
 
@@ -21,7 +21,7 @@ export class TokenService {
 
     constructor(
         private http: HttpClient,
-        private voteKeyService: VoteKeyService,
+        private voterKeyService: VoterKeyService,
         private identityKeyService: IdentityKeyService,
         private cryptoService: WebCryptoEd25519Service
     ) { }
@@ -45,7 +45,8 @@ export class TokenService {
             return voter.token[0];
         }
 
-        const voteKeyPair = await this.voteKeyService.ensureVoteKeyPair();
+        const signingVoteKeyPair = await this.voterKeyService.ensureSigningVoteKeyPair();
+        const encryptionVoteKeyPair = await this.voterKeyService.ensureEncryptionVoteKeyPair();
         const identityPrivateKey = this.identityKeyService.getIdentityPrivateKey();
 
         if (!identityPrivateKey) {
@@ -54,11 +55,12 @@ export class TokenService {
 
         const payload: VoteTokenRequestPayload = {
             voterId: voter.voterId,
-            voterPublicKey: voteKeyPair.publicKey,
+            voterSigningPublicKey: signingVoteKeyPair.publicKey,
+            voterEncryptionPublicKey: encryptionVoteKeyPair.publicKey,
             requestedAt: new Date().toISOString()
         };
-
         const canonicalJsonPayload = canonicalJson(payload);
+
         const identitySignature = await this.cryptoService.signToBase64(
             identityPrivateKey,
             canonicalJsonPayload

@@ -74,6 +74,7 @@ export class LoginComponent {
         } catch (error) {
           this.loading = false;
           this.errorMessage = 'No se pudo preparar el token de voto, por favor, vuelva a intentarlo.';
+          console.log(error);
         }
       }
     });

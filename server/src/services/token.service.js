@@ -11,7 +11,8 @@ dotenv.config();
 
 export async function requestToken({
     voterId,
-    voterPublicKey,
+    voterSigningPublicKey,
+    voterEncryptionPublicKey,
     requestedAt,
     identitySignature,
     authenticatedVoterId
@@ -27,7 +28,7 @@ export async function requestToken({
         throw new Error("No se ha especificado la passphrase");
     }
 
-    if (!voterId || !voterPublicKey || !requestedAt || !identitySignature) {
+    if (!voterId || !voterSigningPublicKey || !voterEncryptionPublicKey || !requestedAt || !identitySignature) {
         return {
             ok: false,
             message: "No se ha proporcionado toda la información necesaria para generar el token"
@@ -52,7 +53,8 @@ export async function requestToken({
 
     const requestPayload = createTokenRequestPayload({
         voterId,
-        voterPublicKey,
+        voterSigningPublicKey,
+        voterEncryptionPublicKey,
         requestedAt
     });
 
@@ -80,7 +82,8 @@ export async function requestToken({
     const issuedTokenPayload = createIssuedTokenPayload({
         tokenId,
         token,
-        voterPublicKey,
+        voterSigningPublicKey,
+        voterEncryptionPublicKey,
         issuedAt,
         used
     });
@@ -106,7 +109,8 @@ export async function requestToken({
     const issuedToken = {
         tokenId,
         token,
-        voterPublicKey,
+        voterSigningPublicKey,
+        voterEncryptionPublicKey,
         issuedAt,
         used,
         anccSignature

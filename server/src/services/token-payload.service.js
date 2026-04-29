@@ -1,7 +1,13 @@
-export function createTokenRequestPayload({ voterId, voterPublicKey, requestedAt }) {
+export function createTokenRequestPayload({
+    voterId,
+    voterSigningPublicKey,
+    voterEncryptionPublicKey,
+    requestedAt
+}) {
     return {
         voterId,
-        voterPublicKey,
+        voterSigningPublicKey,
+        voterEncryptionPublicKey,
         requestedAt
     };
 }
@@ -9,14 +15,16 @@ export function createTokenRequestPayload({ voterId, voterPublicKey, requestedAt
 export function createIssuedTokenPayload({
     tokenId,
     token,
-    voterPublicKey,
+    voterSigningPublicKey,
+    voterEncryptionPublicKey,
     issuedAt,
     used
 }) {
     return {
         tokenId,
         token,
-        voterPublicKey,
+        voterSigningPublicKey,
+        voterEncryptionPublicKey,
         issuedAt,
         used
     };
