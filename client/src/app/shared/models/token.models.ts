@@ -13,7 +13,6 @@ export interface VoteToken {
     tokenId: string;
     token: string;
     voterSigningPublicKey: string;
-    voterEncryptionPublicKey: string;
     issuedAt: string;
     used: boolean;
     countrySignature: string;

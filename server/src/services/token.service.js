@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import { randomBytes, randomUUID } from "crypto";
 import { canonicalJson } from "../../../shared/utils/canonical-json.util.js";
-import { findVoterById, updateVoterToken } from "../repositories/voter.repository.js";
+import { findVoterById, updateVoterAfterTokenCreation } from "../repositories/voter.repository.js";
 import { signEd25519, verifyEd25519 } from "../crypto/signatures/ed22519.js";
 import { createTokenRequestPayload, createIssuedTokenPayload } from "./token-payload.service.js";
 import { getCountryPrivateKeyPath } from "../config/paths.js";
@@ -83,7 +83,6 @@ export async function requestToken({
         tokenId,
         token,
         voterSigningPublicKey,
-        voterEncryptionPublicKey,
         issuedAt,
         used
     });
@@ -110,13 +109,12 @@ export async function requestToken({
         tokenId,
         token,
         voterSigningPublicKey,
-        voterEncryptionPublicKey,
         issuedAt,
         used,
         anccSignature
     };
 
-    await updateVoterToken(voterId, issuedToken);
+    await updateVoterAfterTokenCreation(voterId, issuedToken, voterEncryptionPublicKey);
 
     return {
         ok: true,

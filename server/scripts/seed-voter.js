@@ -31,6 +31,7 @@ async function createVoter() {
         voterId: `${country}-12345678`,
         secretCode: hashedSecretCode,
         identityPublicKey: publicKey,
+        encryptionPublicKey: "",
         token: []
     });
     await voter.save();

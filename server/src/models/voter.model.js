@@ -15,6 +15,10 @@ const voterSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    encryptionPublicKey: {
+        type: String,
+        requiered: false
+    },
     token: {
         type: [tokenSchema],
         default: [],

@@ -14,10 +14,6 @@ const tokenSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    voterEncryptionPublicKey: {
-        type: String,
-        required: true
-    },
     issuedAt: {
         type: Date,
         required: true

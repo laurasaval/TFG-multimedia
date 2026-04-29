@@ -16,7 +16,6 @@ export function createIssuedTokenPayload({
     tokenId,
     token,
     voterSigningPublicKey,
-    voterEncryptionPublicKey,
     issuedAt,
     used
 }) {
@@ -24,7 +23,6 @@ export function createIssuedTokenPayload({
         tokenId,
         token,
         voterSigningPublicKey,
-        voterEncryptionPublicKey,
         issuedAt,
         used
     };
