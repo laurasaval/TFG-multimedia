@@ -7,6 +7,8 @@ import { API_CONFIG } from "../config/api.config";
 import { VoterKeyService } from "./voter-key.service";
 import { IdentityKeyService } from "./identity-key.service";
 import { WebCryptoEd25519Service } from "./web-crypto-ed25519.service";
+import { HybridCryptoService } from "./hybrid-crypto.service";
+import { CountryKeyService } from "./country-key.service";
 
 import { canonicalJson } from "../../../../../shared/utils/canonical-json.util";
 import { VoteToken, VoteTokenRequestBody, VoteTokenRequestPayload, VoteTokenResponse } from "../../shared/models/token.models";
@@ -23,7 +25,9 @@ export class TokenService {
         private http: HttpClient,
         private voterKeyService: VoterKeyService,
         private identityKeyService: IdentityKeyService,
-        private cryptoService: WebCryptoEd25519Service
+        private cryptoService: WebCryptoEd25519Service,
+        private hybridCryptoService: HybridCryptoService,
+        private countryKeyService: CountryKeyService
     ) { }
 
     getStoredToken(): VoteToken | null {
@@ -66,15 +70,24 @@ export class TokenService {
             canonicalJsonPayload
         );
 
-        const tokenRequest: VoteTokenRequestBody = {
+        const tokenRequestEnvelope: VoteTokenRequestBody = {
             ...payload,
             identitySignature
         };
 
+        const countryEncryptionPublicKey = this.countryKeyService.getCountryEncryptionPublicKey(
+            voter.voterId.split('-')[0]
+        );
+
+        const encryptedRequest = await this.hybridCryptoService.encryptJsonForPublicKey(
+            tokenRequestEnvelope,
+            countryEncryptionPublicKey
+        )
+
         const response = await firstValueFrom(
             this.http.post<VoteTokenResponse>(
                 this.apiUrl,
-                tokenRequest
+                encryptedRequest
             )
         );
 

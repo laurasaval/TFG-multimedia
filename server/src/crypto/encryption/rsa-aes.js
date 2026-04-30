@@ -1,4 +1,12 @@
-import { randomBytes, createCipheriv, publicEncrypt, constants, generateKeyPairSync } from "crypto";
+import {
+	randomBytes,
+	createCipheriv,
+	publicEncrypt,
+	constants,
+	generateKeyPairSync,
+	privateDecrypt,
+	createDecipheriv
+} from "crypto";
 
 export function generateRSAOAEPKeyPair({ passphrase }) {
 	const { publicKey, privateKey } = generateKeyPairSync("rsa", {
@@ -47,4 +55,40 @@ export function encryptJsonForPublicKey(data, publicKeyPem) {
 		ciphertextBase64: encrypted.toString("base64"),
 		authTagBase64: authTag.toString("base64")
 	};
+}
+
+export function decryptJsonWithPrivateKey(encrypted, privateKeyPem, passphrase) {
+	const aesKey = privateDecrypt(
+		{
+			key: privateKeyPem,
+			passphrase,
+			padding: constants.RSA_PKCS1_OAEP_PADDING,
+			oaepHash: "sha256"
+		},
+		Buffer.from(encrypted.encryptedKeyBase64, "base64")
+	);
+
+	const encryptedBuffer = Buffer.from(encrypted.ciphertextBase64, "base64");
+
+	/**
+	 * Web Crypto devuelve ciphertext + authTag juntos.
+	 * En AES-GCM el tag son los últimos 16 bytes.
+	 */
+	const authTag = encryptedBuffer.subarray(encryptedBuffer.length - 16);
+	const ciphertext = encryptedBuffer.subarray(0, encryptedBuffer.length - 16);
+
+	const decipher = createDecipheriv(
+		"aes-256-gcm",
+		aesKey,
+		Buffer.from(encrypted.ivBase64, "base64")
+	);
+
+	decipher.setAuthTag(authTag);
+
+	const plaintext = Buffer.concat([
+		decipher.update(ciphertext),
+		decipher.final()
+	]);
+
+	return JSON.parse(plaintext.toString("utf-8"));
 }

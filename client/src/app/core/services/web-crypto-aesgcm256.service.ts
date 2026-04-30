@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { VotePlain, VoteEncrypted } from "../../shared/models/vote.model";
 import { arrayBufferToBase64, base64ToArrayBuffer } from "../utils/base64.util";
+import { EncryptedResult } from "../../shared/models/encrypted.model";
 
 @Injectable({
     providedIn: 'root'
@@ -15,6 +16,10 @@ export class WebCryptoAESGCMService {
             true,
             ['encrypt', 'decrypt']
         ) as Promise<CryptoKey>;
+    }
+
+    async exportRawKey(key: CryptoKey): Promise<ArrayBuffer> {
+        return await crypto.subtle.exportKey('raw', key);
     }
 
     async exportKeyToBase64(key: CryptoKey): Promise<string> {
@@ -37,9 +42,9 @@ export class WebCryptoAESGCMService {
         ) as Promise<CryptoKey>;
     }
 
-    async encryptVote(key: CryptoKey, votePlain: VotePlain): Promise<VoteEncrypted> {
+    async encrypt(key: CryptoKey, data: unknown): Promise<EncryptedResult> {
         const iv = crypto.getRandomValues(new Uint8Array(12));
-        const encoded = new TextEncoder().encode(JSON.stringify(votePlain));
+        const encoded = new TextEncoder().encode(JSON.stringify(data));
 
         const ciphertext = await crypto.subtle.encrypt(
             {
@@ -51,14 +56,14 @@ export class WebCryptoAESGCMService {
         );
 
         return {
-            ciphertextBase64: arrayBufferToBase64(ciphertext),
-            ivBase64: arrayBufferToBase64(iv.buffer)
+            ivBase64: arrayBufferToBase64(iv.buffer),
+            ciphertextBase64: arrayBufferToBase64(ciphertext)
         };
     }
 
-    async decryptVote(key: CryptoKey, encryptedVote: VoteEncrypted): Promise<string> {
-        const iv = base64ToArrayBuffer(encryptedVote.ivBase64);
-        const ciphertext = base64ToArrayBuffer(encryptedVote.ciphertextBase64);
+    async decryptVote(key: CryptoKey, data: EncryptedResult): Promise<string> {
+        const iv = base64ToArrayBuffer(data.ivBase64);
+        const ciphertext = base64ToArrayBuffer(data.ciphertextBase64);
 
         const plaintextBuffer = await crypto.subtle.decrypt(
             {

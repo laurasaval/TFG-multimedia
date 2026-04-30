@@ -20,10 +20,10 @@ export function getCountryPrivateKeyPath(country) {
     return path.join(getCountryKeysPath(country), "private.pem");
 }
 
-export function getVoterKeysPath(country) {
-    return path.join(getKeysPath(), "voters", country);
+export function getCountryEncryptionPrivateKeyPath(country) {
+    return path.join(getCountryKeysPath(country), "encryption-private.pem");
 }
 
-export function getVoterPrivateKeyPath(country, voterId) {
-    return path.join(getVoterKeysPath(country), `${voterId}_private.pem`);
+export function getVoterKeysPath(country) {
+    return path.join(getKeysPath(), "voters", country);
 }

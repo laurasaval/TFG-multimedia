@@ -5,20 +5,20 @@ import { canonicalJson } from "../../../shared/utils/canonical-json.util.js";
 import { findVoterById, updateVoterAfterTokenCreation } from "../repositories/voter.repository.js";
 import { signEd25519, verifyEd25519 } from "../crypto/signatures/ed22519.js";
 import { createTokenRequestPayload, createIssuedTokenPayload } from "./token-payload.service.js";
-import { getCountryPrivateKeyPath } from "../config/paths.js";
+import { getCountryEncryptionPrivateKeyPath, getCountryPrivateKeyPath } from "../config/paths.js";
+import { decryptJsonWithPrivateKey } from "../crypto/encryption/rsa-aes.js";
 
 dotenv.config();
 
 export async function requestToken({
-    voterId,
-    voterSigningPublicKey,
-    voterEncryptionPublicKey,
-    requestedAt,
-    identitySignature,
+    encryptedKeyBase64,
+    ivBase64,
+    ciphertextBase64,
     authenticatedVoterId
 }) {
     const countryCode = process.env.COUNTRY_CODE?.toLowerCase();
     const passphrase = process.env.COUNTRY_KEY_PASSPHRASE;
+    const encryptionPassphrase = process.env.COUNTRY_ENCRYPTION_KEY_PASSPHRASE;
 
     if (!countryCode) {
         throw new Error("No se ha especificado el código del país");
@@ -27,6 +27,44 @@ export async function requestToken({
     if (!passphrase) {
         throw new Error("No se ha especificado la passphrase");
     }
+
+    if (!encryptionPassphrase) {
+        throw new Error("COUNTRY_ENCRYPTION_KEY_PASSPHRASE no está configurada");
+    }
+
+    if (!encryptedKeyBase64 || !ivBase64 || !ciphertextBase64 || !authenticatedVoterId) {
+        return {
+            ok: false,
+            message: "1. No se ha proporcionado toda la información necesaria para generar el token"
+        };
+    }
+
+    const countryEncryptionPrivateKeyPath = getCountryEncryptionPrivateKeyPath(countryCode);
+
+    if (!fs.existsSync(countryEncryptionPrivateKeyPath)) {
+        throw new Error("No se ha encontrado la clave privada RSA-OAEP del país");
+    }
+
+    const countryEncryptionPrivateKeyPem = fs.readFileSync(countryEncryptionPrivateKeyPath, "utf-8");
+    const encryptedRequest = {
+        encryptedKeyBase64,
+        ivBase64,
+        ciphertextBase64
+    }
+
+    const decryptedEnvelope = decryptJsonWithPrivateKey(
+        encryptedRequest,
+        countryEncryptionPrivateKeyPem,
+        encryptionPassphrase
+    );
+
+    const {
+        voterId,
+        voterSigningPublicKey,
+        voterEncryptionPublicKey,
+        requestedAt,
+        identitySignature
+    } = decryptedEnvelope;
 
     if (!voterId || !voterSigningPublicKey || !voterEncryptionPublicKey || !requestedAt || !identitySignature) {
         return {

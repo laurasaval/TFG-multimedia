@@ -26,7 +26,7 @@ export class VoteService {
     async encryptVote(votePlain: VotePlain): Promise<[VoteEncrypted, string]> {
         const symmetricKey = await this.webCryptoAESGCMService.generateKey();
 
-        const encryptedVote = await this.webCryptoAESGCMService.encryptVote(symmetricKey, votePlain);
+        const encryptedVote = await this.webCryptoAESGCMService.encrypt(symmetricKey, votePlain);
         const symmetricKeyBase64 = await this.webCryptoAESGCMService.exportKeyToBase64(symmetricKey);
 
         return [encryptedVote, symmetricKeyBase64];
