@@ -27,13 +27,16 @@
     "seed-voters:es": "node scripts/seed-voter.js es",
     "seed:fr-voters": "node scripts/seed-voter.js fr",
     "seed:de-voters": "node scripts/seed-voter.js de",
-    "keys:es": "node scripts/generate-country-keys.js es",
-    "keys:fr": "node scripts/generate-country-keys.js fr",
-    "keys:de": "node scripts/generate-country-keys.js de",
     "seed-voting:es": "node scripts/seed-voting-config.js es",
     "seed-voting:fr": "node scripts/seed-voting-config.js fr",
     "seed-voting:de": "node scripts/seed-voting-config.js de",
-    "seed-voting:all": "node scripts/seed-voting-config-all.js"
+    "seed-voting:all": "node scripts/seed-voting-config-all.js",
+    "keys:es": "node scripts/generate-country-keys.js es",
+    "keys:fr": "node scripts/generate-country-keys.js fr",
+    "keys:de": "node scripts/generate-country-keys.js de",
+    "keys-encryption:es": "node scripts/generate-country-encryption-keys.js es",
+    "keys-encryption:fr": "node scripts/generate-country-encryption-keys.js fr",
+    "keys-encryption:de": "node scripts/generate-country-encryption-keys.js de"
   },
   "dependencies": {
     "argon2": "^0.44.0",
