@@ -1,9 +1,14 @@
 <main class="login-container">
-    <h2>Inicio de Sesión</h2>
-    <form (ngSubmit)="onSubmit()">
+    <h2>Eurovisión 2026 Viena</h2>
+    <form (ngSubmit)="onSubmit()" [attr.aria-describedby]="errorMessage ? 'login-help login-error' : 'login-help'"
+        novalidate>
+        <p id="login-help" class="form-help">
+            Introduce tus credenciales de votante para acceder de forma segura.
+        </p>
+
         <div class="form-group">
             <label for="voterId">ID de Votante</label>
-            <input type="text" id="voterId" [(ngModel)]="voterId" name="voterId" required>
+            <input type="text" id="voterId" [(ngModel)]="voterId" name="voterId" autocomplete="username" required>
         </div>
         <div class="form-group">
             <label for="secretCode">Código Secreto</label>
@@ -11,9 +16,14 @@
         </div>
         <div class="form-group">
             <label for="privateKey">Clave Privada</label>
-            <input type="file" id="privateKey" (change)="onPemSelected($event)" accept=".pem" required>
+            <p id="privateKey-help" class="field-help">
+                Selecciona tu archivo PEM privado.
+            </p>
+            <input type="file" id="privateKey" (change)="onPemSelected($event)" accept=".pem" required
+                aria-describedby="privateKey-help">
         </div>
         <button type="submit" [disabled]="loading">{{ loading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</button>
-        <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+        <div *ngIf="errorMessage" id="login-error" class="error-message" role="alert" aria-live="assertive">{{
+            errorMessage }}</div>
     </form>
 </main>
