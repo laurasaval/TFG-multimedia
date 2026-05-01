@@ -1,87 +1,127 @@
-<button (click)="onLogout()">Cerrar sesión</button>
+<header class="dashboard-header">
+    <h1 class="dashboard-title">
+        <span>Panel de</span> Votación
+    </h1>
+    <nav aria-label="Acciones de sesión">
+        <button
+            class="btn-logout"
+            type="button"
+            (click)="onLogout()"
+            aria-label="Cerrar sesión y volver al inicio de sesión">
+            Cerrar sesión
+        </button>
+    </nav>
+</header>
 
-<!-- <main>
-    <h2>Elige a tus favoritos</h2>
-    <p>Puedes votar tantas canciones como quieras. Tu voto será anónimo.</p>
+<main class="dashboard-main" id="main-content">
 
-    <div *ngIf="loadingConfig">Cargando votación...</div>
-
-    <div *ngIf="votingState === 'closed'">
-        La votación ha finalizado
+    <!-- Loading state -->
+    <div
+        *ngIf="loading"
+        class="status-card status-card--loading"
+        role="status"
+        aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        Cargando votación…
     </div>
 
-    <div *ngIf="votingState === 'not-started'">
-        La votación comienza en:
-        <div>{{ countdownText }}</div>
-    </div>
-
-    <div *ngIf="votingState === 'open'">
-        La votación está abierta
-        <div>{{ countdownText }}</div>
-    </div>
-
-    <section *ngIf="votingState === 'open'">
-        <div *ngFor="let country of voting?.candidates">
-            <label>
-                <input
-                    type="checkbox"
-                    (change)="onCountrySelectionChange(country.countryCode, $event)"
-                    [checked]="selectedCountries.includes(country.countryCode)"
-                >
-                {{ country.countryName }}
-            </label>
-        </div>
-    </section>
-</main> -->
-
-
-<main class="dashboard-container">
-    <h2>Panel de votación</h2>
-
-    <div *ngIf="loading">
-        Cargando votación...
-    </div>
-
-    <div *ngIf="errorMessage" class="error-message">
+    <!-- Error message -->
+    <div
+        *ngIf="errorMessage"
+        class="status-card status-card--error"
+        role="alert"
+        aria-live="assertive">
         {{ errorMessage }}
     </div>
 
-    <section *ngIf="voting">
-        <h3>{{ voting.title }}</h3>
-        <p>Edición: {{ voting.editionCode }}</p>
+    <!-- Success message -->
+    <div
+        *ngIf="successMessage"
+        class="status-card status-card--success"
+        role="status"
+        aria-live="polite">
+        {{ successMessage }}
+    </div>
+
+    <!-- Voting content -->
+    <section
+        *ngIf="voting"
+        class="voting-section"
+        aria-labelledby="voting-heading">
+
+        <div class="voting-header">
+            <h2 id="voting-heading" class="voting-title">{{ voting.title }}</h2>
+            <p class="voting-edition">Edición: <strong>{{ voting.editionCode }}</strong></p>
+        </div>
 
         <ng-container [ngSwitch]="votingState">
-            <div *ngSwitchCase="'not-started'" class="info-message">
-                <p>La votación todavía no ha comenzado.</p>
-                <p>Tiempo restante: <strong>{{ countdownText }}</strong></p>
+
+            <!-- Not started -->
+            <div
+                *ngSwitchCase="'not-started'"
+                class="state-card state-card--waiting"
+                role="status"
+                aria-live="polite">
+                <p class="state-card__title">La votación todavía no ha comenzado.</p>
+                <p class="state-card__countdown">
+                    Tiempo restante:
+                    <strong aria-live="off" aria-atomic="true">{{ countdownText }}</strong>
+                </p>
             </div>
 
-            <div *ngSwitchCase="'closed'" class="info-message">
-                <p>La votación de esta edición ya ha finalizado.</p>
-                <p>Te esperamos para la próxima edición.</p>
+            <!-- Closed -->
+            <div
+                *ngSwitchCase="'closed'"
+                class="state-card state-card--closed"
+                role="status">
+                <p class="state-card__title">La votación de esta edición ya ha finalizado.</p>
+                <p class="state-card__subtitle">Te esperamos para la próxima edición.</p>
             </div>
 
-            <form *ngSwitchCase="'open'">
-                <fieldset>
-                    <legend>Selecciona los países aprobados</legend>
+            <!-- Open — voting form -->
+            <form
+                *ngSwitchCase="'open'"
+                class="vote-form"
+                aria-describedby="vote-instructions">
 
-                    <div class="country-option" *ngFor="let candidate of voting.candidates">
-                        <label>
-                            <input type="checkbox" [value]="candidate.countryCode"
+                <p id="vote-instructions" class="vote-form__help">
+                    Selecciona los países que quieres apoyar y pulsa «Preparar voto» cuando hayas terminado.
+                </p>
+
+                <fieldset class="vote-form__fieldset">
+                    <legend class="vote-form__legend">Países candidatos</legend>
+
+                    <div
+                        class="country-grid"
+                        role="group"
+                        aria-label="Lista de países candidatos">
+                        <label
+                            class="country-option"
+                            *ngFor="let candidate of voting.candidates; trackBy: trackByCountry">
+                            <input
+                                type="checkbox"
+                                class="country-option__input"
+                                [value]="candidate.countryCode"
+                                [attr.aria-label]="candidate.countryName + ' (' + candidate.countryCode + ')'"
                                 (change)="onCountrySelectionChange(candidate.countryCode, $event)" />
-                            {{ candidate.countryName }} ({{ candidate.countryCode }})
+                            <span class="country-option__check" aria-hidden="true"></span>
+                            <span class="country-option__label">
+                                {{ candidate.countryName }}
+                                <abbr class="country-option__code" [title]="candidate.countryName">{{ candidate.countryCode }}</abbr>
+                            </span>
                         </label>
                     </div>
                 </fieldset>
 
-                <button type="button" (click)="prepareVote()">
+                <button
+                    class="btn-primary"
+                    type="button"
+                    (click)="prepareVote()"
+                    [disabled]="selectedCountries.length === 0">
                     Preparar voto
                 </button>
             </form>
+
         </ng-container>
     </section>
-
-    <div *ngIf="successMessage" class="success-message">
-        {{ successMessage }}
-    </div>
 </main>

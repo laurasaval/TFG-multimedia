@@ -139,6 +139,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  trackByCountry(_index: number, candidate: { countryCode: string }): string {
+    return candidate.countryCode;
+  }
+
   onLogout() {
     this.authService.logout();
     this.router.navigate(['/login']);
