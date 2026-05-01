@@ -1,12 +1,9 @@
 <header class="dashboard-header">
     <h1 class="dashboard-title">
-        <span>Panel de</span> Votación
+        ESC 2026
     </h1>
     <nav aria-label="Acciones de sesión">
-        <button
-            class="btn-logout"
-            type="button"
-            (click)="onLogout()"
+        <button class="btn-logout" type="button" (click)="onLogout()"
             aria-label="Cerrar sesión y volver al inicio de sesión">
             Cerrar sesión
         </button>
@@ -16,38 +13,23 @@
 <main class="dashboard-main" id="main-content">
 
     <!-- Loading state -->
-    <div
-        *ngIf="loading"
-        class="status-card status-card--loading"
-        role="status"
-        aria-live="polite">
+    <div *ngIf="loading" class="status-card status-card--loading" role="status" aria-live="polite">
         <span class="spinner" aria-hidden="true"></span>
         Cargando votación…
     </div>
 
     <!-- Error message -->
-    <div
-        *ngIf="errorMessage"
-        class="status-card status-card--error"
-        role="alert"
-        aria-live="assertive">
+    <div *ngIf="errorMessage" class="status-card status-card--error" role="alert" aria-live="assertive">
         {{ errorMessage }}
     </div>
 
     <!-- Success message -->
-    <div
-        *ngIf="successMessage"
-        class="status-card status-card--success"
-        role="status"
-        aria-live="polite">
+    <div *ngIf="successMessage" class="status-card status-card--success" role="status" aria-live="polite">
         {{ successMessage }}
     </div>
 
     <!-- Voting content -->
-    <section
-        *ngIf="voting"
-        class="voting-section"
-        aria-labelledby="voting-heading">
+    <section *ngIf="voting" class="voting-section" aria-labelledby="voting-heading">
 
         <div class="voting-header">
             <h2 id="voting-heading" class="voting-title">{{ voting.title }}</h2>
@@ -57,11 +39,7 @@
         <ng-container [ngSwitch]="votingState">
 
             <!-- Not started -->
-            <div
-                *ngSwitchCase="'not-started'"
-                class="state-card state-card--waiting"
-                role="status"
-                aria-live="polite">
+            <div *ngSwitchCase="'not-started'" class="state-card state-card--waiting" role="status" aria-live="polite">
                 <p class="state-card__title">La votación todavía no ha comenzado.</p>
                 <p class="state-card__countdown">
                     Tiempo restante:
@@ -70,19 +48,13 @@
             </div>
 
             <!-- Closed -->
-            <div
-                *ngSwitchCase="'closed'"
-                class="state-card state-card--closed"
-                role="status">
+            <div *ngSwitchCase="'closed'" class="state-card state-card--closed" role="status">
                 <p class="state-card__title">La votación de esta edición ya ha finalizado.</p>
                 <p class="state-card__subtitle">Te esperamos para la próxima edición.</p>
             </div>
 
             <!-- Open — voting form -->
-            <form
-                *ngSwitchCase="'open'"
-                class="vote-form"
-                aria-describedby="vote-instructions">
+            <form *ngSwitchCase="'open'" class="vote-form" aria-describedby="vote-instructions">
 
                 <p id="vote-instructions" class="vote-form__help">
                     Selecciona los países que quieres apoyar y pulsa «Preparar voto» cuando hayas terminado.
@@ -91,32 +63,23 @@
                 <fieldset class="vote-form__fieldset">
                     <legend class="vote-form__legend">Países candidatos</legend>
 
-                    <div
-                        class="country-grid"
-                        role="group"
-                        aria-label="Lista de países candidatos">
-                        <label
-                            class="country-option"
+                    <div class="country-grid" role="group" aria-label="Lista de países candidatos">
+                        <label class="country-option"
                             *ngFor="let candidate of voting.candidates; trackBy: trackByCountry">
-                            <input
-                                type="checkbox"
-                                class="country-option__input"
-                                [value]="candidate.countryCode"
+                            <input type="checkbox" class="country-option__input" [value]="candidate.countryCode"
                                 [attr.aria-label]="candidate.countryName + ' (' + candidate.countryCode + ')'"
                                 (change)="onCountrySelectionChange(candidate.countryCode, $event)" />
                             <span class="country-option__check" aria-hidden="true"></span>
                             <span class="country-option__label">
                                 {{ candidate.countryName }}
-                                <abbr class="country-option__code" [title]="candidate.countryName">{{ candidate.countryCode }}</abbr>
+                                <abbr class="country-option__code" [title]="candidate.countryName">{{
+                                    candidate.countryCode }}</abbr>
                             </span>
                         </label>
                     </div>
                 </fieldset>
 
-                <button
-                    class="btn-primary"
-                    type="button"
-                    (click)="prepareVote()"
+                <button class="btn-primary" type="button" (click)="prepareVote()"
                     [disabled]="selectedCountries.length === 0">
                     Preparar voto
                 </button>
