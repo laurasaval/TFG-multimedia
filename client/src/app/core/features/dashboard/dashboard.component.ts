@@ -9,8 +9,17 @@ import { VotingConfigService } from '../../services/voting-config.service';
 import { VoteService } from '../../services/vote.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Candidate } from '../../../shared/models/voting-config.models';
+
 
 type VotingState = 'not-started' | 'open' | 'closed';
+
+interface SelectedPerformanceVideo {
+  countryCode: string;
+  countryName: string;
+  safeUrl: SafeResourceUrl;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -21,6 +30,7 @@ type VotingState = 'not-started' | 'open' | 'closed';
 export class DashboardComponent implements OnInit, OnDestroy {
   voting: VotingConfig | null = null;
   votingState: VotingState | null = null;
+  selectedPerformance: SelectedPerformanceVideo | null = null;
 
   selectedCountries: string[] = [];
   votePlain: VotePlain | null = null;
@@ -38,7 +48,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private votingConfigService: VotingConfigService,
-    private voteService: VoteService
+    private voteService: VoteService,
+    private sanitizer: DomSanitizer
   ) { }
 
   async ngOnInit() {
@@ -146,5 +157,47 @@ export class DashboardComponent implements OnInit, OnDestroy {
   onLogout() {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  openPerformanceVideo(candidate: Candidate): void {
+    if (!candidate.performanceUrl) {
+      this.errorMessage = `No hay vídeo disponible para ${candidate.countryName}`;
+      return;
+    }
+
+    const embedUrl = this.toYoutubeEmbedUrl(candidate.performanceUrl);
+
+    if (!embedUrl) {
+      this.errorMessage = `El vídeo de ${candidate.countryName} no tiene una URL válida`;
+      return;
+    }
+
+    this.selectedPerformance = {
+      countryCode: candidate.countryCode,
+      countryName: candidate.countryName,
+      safeUrl: this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl)
+    };
+  }
+
+  closePerformanceVideo(): void {
+    this.selectedPerformance = null;
+  }
+
+  private toYoutubeEmbedUrl(url: string): string | null {
+    const videoId = this.extractYoutubeVideoId(url);
+
+    if (!videoId) {
+      return null;
+    }
+
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+
+  private extractYoutubeVideoId(url: string): string | null {
+    const match = url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
+    );
+
+    return match ? match[1] : null;
   }
 }

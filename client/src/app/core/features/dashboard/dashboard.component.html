@@ -64,7 +64,7 @@
                     <legend class="vote-form__legend">Países candidatos</legend>
 
                     <div class="country-grid" role="group" aria-label="Lista de países candidatos">
-                        <label class="country-option"
+                        <!-- <label class="country-option"
                             *ngFor="let candidate of voting.candidates; trackBy: trackByCountry">
                             <input type="checkbox" class="country-option__input" [value]="candidate.countryCode"
                                 [attr.aria-label]="candidate.countryName + ' (' + candidate.countryCode + ')'"
@@ -75,7 +75,31 @@
                                 <abbr class="country-option__code" [title]="candidate.countryName">{{
                                     candidate.countryCode }}</abbr>
                             </span>
-                        </label>
+                        </label> -->
+                        <div class="country-option-row"
+                            *ngFor="let candidate of voting.candidates; trackBy: trackByCountry">
+                            <label class="country-option">
+                                <input type="checkbox" class="country-option__input" [value]="candidate.countryCode"
+                                    [attr.aria-label]="candidate.countryName + ' (' + candidate.countryCode + ')'"
+                                    (change)="onCountrySelectionChange(candidate.countryCode, $event)" />
+
+                                <span class="country-option__check" aria-hidden="true"></span>
+
+                                <span class="country-option__label">
+                                    {{ candidate.countryName }}
+                                    <abbr class="country-option__code" [title]="candidate.countryName">
+                                        {{ candidate.countryCode }}
+                                    </abbr>
+                                </span>
+                            </label>
+
+                            <button type="button" class="btn-performance" (click)="openPerformanceVideo(candidate)"
+                                [disabled]="!candidate.performanceUrl" [attr.aria-label]="candidate.performanceUrl
+            ? 'Ver actuación de ' + candidate.countryName
+            : 'No hay vídeo disponible para ' + candidate.countryName">
+                                Ver actuación
+                            </button>
+                        </div>
                     </div>
                 </fieldset>
 
@@ -87,4 +111,33 @@
 
         </ng-container>
     </section>
+    <div *ngIf="selectedPerformance" class="video-modal" role="dialog" aria-modal="true"
+        aria-labelledby="video-modal-title" aria-describedby="video-modal-description"
+        (click)="closePerformanceVideo()">
+        <div class="video-modal__panel" (click)="$event.stopPropagation()">
+            <header class="video-modal__header">
+                <div>
+                    <p id="video-modal-description" class="video-modal__eyebrow">
+                        Actuación oficial
+                    </p>
+
+                    <h2 id="video-modal-title" class="video-modal__title">
+                        {{ selectedPerformance.countryName }}
+                        <span>{{ selectedPerformance.countryCode }}</span>
+                    </h2>
+                </div>
+
+                <button type="button" class="video-modal__close" (click)="closePerformanceVideo()"
+                    aria-label="Cerrar vídeo de la actuación">
+                    ×
+                </button>
+            </header>
+
+            <div class="video-modal__frame">
+                <iframe [src]="selectedPerformance.safeUrl" title="Vídeo de la actuación"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
 </main>

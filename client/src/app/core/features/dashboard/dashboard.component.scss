@@ -881,3 +881,303 @@
         background: #06071bee;
     }
 }
+
+
+/* ==========================================================================
+   Country row with performance action
+   ========================================================================== */
+
+.country-option-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+}
+
+.country-option-row .country-option {
+    inline-size: 100%;
+}
+
+.btn-performance {
+    min-block-size: 2.75rem;
+    padding: 0.65rem 1rem;
+
+    border: 2px solid rgba(255, 250, 247, 0.26);
+    border-radius: var(--radius-pill);
+
+    color: var(--text);
+    background:
+        linear-gradient(180deg, rgba(255, 250, 247, 0.07), rgba(255, 250, 247, 0.025)),
+        rgba(8, 10, 34, 0.62);
+
+    font: inherit;
+    font-size: 0.88rem;
+    line-height: 1.2;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0.45rem 1rem rgba(0, 0, 0, 0.16);
+
+    transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        background 180ms ease,
+        box-shadow 180ms ease,
+        opacity 180ms ease;
+}
+
+.btn-performance:hover:not(:disabled) {
+    transform: translateY(-0.035rem);
+    border-color: rgba(94, 231, 255, 0.72);
+    background:
+        linear-gradient(180deg, rgba(255, 250, 247, 0.1), rgba(255, 250, 247, 0.04)),
+        rgba(8, 10, 34, 0.76);
+
+    box-shadow:
+        0 0 0 1px rgba(94, 231, 255, 0.14),
+        0 0.65rem 1.25rem rgba(0, 0, 0, 0.2);
+}
+
+.btn-performance:focus,
+.btn-performance:focus-visible {
+    outline: 0.22rem solid var(--focus);
+    outline-offset: 0.18rem;
+
+    box-shadow:
+        0 0 0 0.38rem var(--focus-shadow),
+        0 0 1.4rem rgba(94, 231, 255, 0.16);
+}
+
+.btn-performance:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    filter: grayscale(0.35);
+    box-shadow: none;
+}
+
+@media (min-width: 42rem) {
+    .country-option-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+    }
+
+    .btn-performance {
+        white-space: nowrap;
+    }
+}
+
+/* ==========================================================================
+   Video modal
+   ========================================================================== */
+
+.video-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+
+    display: grid;
+    place-items: center;
+
+    padding: clamp(1rem, 4vw, 2rem);
+
+    background:
+        radial-gradient(circle at 50% 30%, rgba(255, 79, 163, 0.18), transparent 22rem),
+        radial-gradient(circle at 80% 80%, rgba(94, 231, 255, 0.12), transparent 20rem),
+        rgba(3, 5, 24, 0.82);
+
+    backdrop-filter: blur(1rem);
+    -webkit-backdrop-filter: blur(1rem);
+}
+
+.video-modal__panel {
+    inline-size: min(100%, 54rem);
+    max-block-size: min(90dvh, 42rem);
+
+    display: grid;
+    gap: 1rem;
+
+    padding: clamp(1rem, 3vw, 1.5rem);
+
+    border: 1px solid rgba(255, 250, 247, 0.18);
+    border-radius: var(--radius-card);
+
+    background:
+        radial-gradient(circle at 18% 0%, rgba(255, 250, 247, 0.105), transparent 9rem),
+        radial-gradient(circle at 100% 92%, rgba(255, 79, 163, 0.08), transparent 14rem),
+        linear-gradient(180deg, rgba(255, 250, 247, 0.105), rgba(255, 250, 247, 0.052)),
+        rgba(8, 10, 34, 0.96);
+
+    box-shadow:
+        0 2rem 5rem rgba(0, 0, 0, 0.48),
+        inset 0 1px 0 rgba(255, 255, 255, 0.13);
+
+    overflow: hidden;
+}
+
+.video-modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.video-modal__eyebrow {
+    margin: 0 0 0.25rem;
+
+    color: rgba(255, 250, 247, 0.68);
+    font-size: 0.78rem;
+    line-height: 1.3;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.video-modal__title {
+    margin: 0;
+
+    color: var(--text-title);
+    font-size: clamp(1.35rem, 4vw, 2rem);
+    line-height: 1.08;
+    font-weight: 950;
+    letter-spacing: -0.04em;
+}
+
+.video-modal__title span {
+    color: var(--cyan);
+    font-size: 0.72em;
+    font-weight: 850;
+}
+
+.video-modal__close {
+    flex: 0 0 auto;
+
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+
+    display: grid;
+    place-items: center;
+
+    border: 2px solid rgba(255, 250, 247, 0.28);
+    border-radius: 50%;
+
+    color: var(--text);
+    background: rgba(255, 250, 247, 0.08);
+
+    font: inherit;
+    font-size: 1.8rem;
+    line-height: 1;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        background 180ms ease;
+}
+
+.video-modal__close:hover {
+    transform: translateY(-0.035rem);
+    border-color: rgba(255, 250, 247, 0.5);
+    background: rgba(255, 250, 247, 0.14);
+}
+
+.video-modal__close:focus,
+.video-modal__close:focus-visible {
+    outline: 0.22rem solid var(--focus);
+    outline-offset: 0.18rem;
+}
+
+.video-modal__frame {
+    position: relative;
+    inline-size: 100%;
+    aspect-ratio: 16 / 9;
+
+    overflow: hidden;
+    border-radius: 1.25rem;
+
+    background: #000000;
+    box-shadow:
+        0 1rem 2rem rgba(0, 0, 0, 0.36),
+        0 0 0 1px rgba(255, 250, 247, 0.12);
+}
+
+.video-modal__frame iframe {
+    position: absolute;
+    inset: 0;
+
+    inline-size: 100%;
+    block-size: 100%;
+
+    border: 0;
+}
+
+/* ==========================================================================
+   Video modal motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+    .video-modal {
+        animation: modal-fade-in 180ms ease-out both;
+    }
+
+    .video-modal__panel {
+        animation: modal-panel-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+}
+
+@keyframes modal-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modal-panel-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.8rem) scale(0.985);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ==========================================================================
+   Video modal high contrast
+   ========================================================================== */
+
+@media (forced-colors: active) {
+
+    .btn-performance,
+    .video-modal__panel,
+    .video-modal__close,
+    .video-modal__frame {
+        background: Canvas;
+        color: CanvasText;
+        border: 2px solid CanvasText;
+        box-shadow: none;
+    }
+
+    .video-modal {
+        background: Canvas;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .btn-performance:focus,
+    .btn-performance:focus-visible,
+    .video-modal__close:focus,
+    .video-modal__close:focus-visible {
+        outline: 3px solid Highlight;
+        outline-offset: 3px;
+        box-shadow: none;
+    }
+}

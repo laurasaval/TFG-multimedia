@@ -6,23 +6,28 @@
     "candidates": [
         {
             "countryCode": "ES",
-            "countryName": "España"
+            "countryName": "España",
+            "performanceUrl": "https://youtu.be/jSQYTt4xg3I?si=LUMFwG_tQHGHyTQp"
         },
         {
             "countryCode": "FR",
-            "countryName": "Francia"
+            "countryName": "Francia",
+            "performanceUrl": "https://youtu.be/ujoCYrvvTYQ?si=V9uwj6Xti2Xb2DxX"
         },
         {
             "countryCode": "DE",
-            "countryName": "Alemania"
+            "countryName": "Alemania",
+            "performanceUrl": "https://youtu.be/AzvRc3eH_rA?si=pIKde8czblMSfYBT"
         },
         {
             "countryCode": "IT",
-            "countryName": "Italia"
+            "countryName": "Italia",
+            "performanceUrl": "https://youtu.be/V406FAGkhyQ?si=vrZDhvO2hp0-xha2"
         },
         {
             "countryCode": "PT",
-            "countryName": "Portugal"
+            "countryName": "Portugal",
+            "performanceUrl": "https://youtu.be/jyHaE6GqaaQ?si=WrUr3yhE-ZB6AlIR"
         }
     ]
 }

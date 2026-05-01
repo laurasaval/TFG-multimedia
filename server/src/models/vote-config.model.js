@@ -11,6 +11,10 @@ const candidateSchema = new mongoose.Schema({
     countryName: {
         type: String,
         required: true
+    },
+    performanceUrl: {
+        type: String,
+        required: false
     }
 }, {
     _id: false

@@ -1,6 +1,7 @@
 export interface Candidate {
     countryCode: string;
     countryName: string;
+    performanceUrl?: string;
 }
 
 export interface VotingConfig {
