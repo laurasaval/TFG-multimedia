@@ -6,7 +6,7 @@ import { findVoterById, updateVoterAfterTokenCreation } from "../repositories/vo
 import { signEd25519, verifyEd25519 } from "../crypto/signatures/ed22519.js";
 import { createTokenRequestPayload, createIssuedTokenPayload } from "./token-payload.service.js";
 import { getCountryEncryptionPrivateKeyPath, getCountryPrivateKeyPath } from "../config/paths.js";
-import { decryptJsonWithPrivateKey } from "../crypto/encryption/rsa-aes.js";
+import { encryptJsonForPublicKey, decryptJsonWithPrivateKey } from "../crypto/encryption/rsa-aes.js";
 
 dotenv.config();
 
@@ -35,7 +35,7 @@ export async function requestToken({
     if (!encryptedKeyBase64 || !ivBase64 || !ciphertextBase64 || !authenticatedVoterId) {
         return {
             ok: false,
-            message: "1. No se ha proporcionado toda la información necesaria para generar el token"
+            message: "No se ha proporcionado toda la información necesaria para generar el token"
         };
     }
 
@@ -152,11 +152,16 @@ export async function requestToken({
         anccSignature
     };
 
-    await updateVoterAfterTokenCreation(voterId, issuedToken, voterEncryptionPublicKey);
+    const encryptedToken = encryptJsonForPublicKey(
+        issuedToken,
+        voterEncryptionPublicKey
+    );
+
+    await updateVoterAfterTokenCreation(voterId, encryptedToken, voterEncryptionPublicKey);
 
     return {
         ok: true,
         message: "Token generado exitosamente",
-        token: issuedToken
+        encryptedToken: encryptedToken
     };
 }

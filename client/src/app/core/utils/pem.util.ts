@@ -1,4 +1,4 @@
-import { arrayBufferToBase64 } from "./base64.util"
+import { arrayBufferToBase64, base64ToArrayBuffer } from "./base64.util"
 
 export async function exportPublicKeyToPem(publicKey: CryptoKey): Promise<string> {
     const skpi = await crypto.subtle.exportKey('spki', publicKey);
@@ -12,6 +12,11 @@ export async function exportPrivateKeyToPem(privateKey: CryptoKey): Promise<stri
     const base64 = arrayBufferToBase64(pkcs8);
 
     return wrapPem(base64, 'PRIVATE KEY');
+}
+
+export function pemToArrayBuffer(pem: string): ArrayBuffer {
+    const cleanPem = strimPemHeaders(pem);
+    return base64ToArrayBuffer(cleanPem);
 }
 
 export function wrapPem(base64: string, label: string): string {

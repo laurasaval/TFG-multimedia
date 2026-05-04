@@ -91,11 +91,53 @@ export class TokenService {
             )
         );
 
-        if (!response.ok || !response.token) {
+        console.log(response);
+
+        if (!response.ok || !response.encryptedToken) {
             throw new Error(response.message ?? 'No se ha recibido un token de voto');
         }
 
-        this.saveToken(response.token);
-        return response.token;
+        const token = await this.hybridCryptoService.decryptJsonWithPrivateKey<VoteToken>(
+            response.encryptedToken,
+            encryptionVoteKeyPair.privateKey
+        )
+
+        await this.verifyCountrySignature(voter.voterId.split('-')[0], token);
+
+        this.saveToken(token);
+        return token;
+    }
+
+    private async verifyCountrySignature(
+        countryCode: string,
+        token: VoteToken
+    ): Promise<void> {
+        const countrySigningPublicKey = this.countryKeyService.getCountrySigningPublicKey(countryCode);
+        const publicKey = await this.cryptoService.importPublicKeyFromPem(countrySigningPublicKey);
+
+        const signedPayload = {
+            tokenId: token.tokenId,
+            token: token.token,
+            voterSigningPublicKey: token.voterSigningPublicKey,
+            issuedAt: token.issuedAt,
+            used: token.used
+        };
+
+        console.log("token descifrado:", token);
+        console.log("countrySignature:", token.anccSignature);
+        console.log("typeof countrySignature:", typeof token.anccSignature);
+
+        const isValid = await this.cryptoService.verifySignature(
+            publicKey,
+            canonicalJson(signedPayload),
+            token.anccSignature
+        );
+
+        console.log("holaaa, estoy aqui");
+        console.log("la fima es valida?", isValid);
+
+        if (!isValid) {
+            throw new Error("La firma del token no es válida");
+        }
     }
 }

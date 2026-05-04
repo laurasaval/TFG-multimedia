@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { tokenSchema } from "./token.model.js";
+import { encryptedTokenSchema } from "./token.model.js";
 
 const voterSchema = new mongoose.Schema({
     voterId: {
@@ -20,7 +20,7 @@ const voterSchema = new mongoose.Schema({
         requiered: false
     },
     token: {
-        type: [tokenSchema],
+        type: [encryptedTokenSchema],
         default: [],
         required: false
     }

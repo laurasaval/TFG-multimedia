@@ -4,13 +4,13 @@ export async function findVoterById(voterId) {
     return await VoterModel.findOne({ voterId });
 }
 
-export async function updateVoterAfterTokenCreation(voterId, token, voterEncryptionPublicKey) {
+export async function updateVoterAfterTokenCreation(voterId, encryptedToken, voterEncryptionPublicKey) {
     return await VoterModel.findOneAndUpdate(
         { voterId },
         {
             $set: {
                 encryptionPublicKey: voterEncryptionPublicKey,
-                token: [token]
+                token: [encryptedToken]
             }
         },
         {

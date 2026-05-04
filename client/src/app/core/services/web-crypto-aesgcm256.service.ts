@@ -1,5 +1,4 @@
 import { Injectable } from "@angular/core";
-import { VotePlain, VoteEncrypted } from "../../shared/models/vote.model";
 import { arrayBufferToBase64, base64ToArrayBuffer } from "../utils/base64.util";
 import { EncryptedResult } from "../../shared/models/encrypted.model";
 
@@ -27,12 +26,10 @@ export class WebCryptoAESGCMService {
         return arrayBufferToBase64(raw);
     }
 
-    async importKeyFromBase64(rawKeyBase64: string): Promise<CryptoKey> {
-        const raw = base64ToArrayBuffer(rawKeyBase64);
-
+    async importRawKey(rawKey: ArrayBuffer): Promise<CryptoKey> {
         return crypto.subtle.importKey(
             'raw',
-            raw,
+            rawKey,
             {
                 name: 'AES-GCM',
                 length: 256
@@ -61,7 +58,7 @@ export class WebCryptoAESGCMService {
         };
     }
 
-    async decryptVote(key: CryptoKey, data: EncryptedResult): Promise<string> {
+    async decrypt<T>(key: CryptoKey, data: EncryptedResult): Promise<T> {
         const iv = base64ToArrayBuffer(data.ivBase64);
         const ciphertext = base64ToArrayBuffer(data.ciphertextBase64);
 

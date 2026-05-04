@@ -34,4 +34,17 @@ export class HybridCryptoService {
             ciphertextBase64: encryptedPayload.ciphertextBase64
         };
     }
+
+    async decryptJsonWithPrivateKey<T>(
+        encrypted: EncryptedEnvelope,
+        privateKeyPem: string
+    ): Promise<T> {
+        const rsaPrivateKey = await this.rsaOaepService.importPrivateKeyFromPem(privateKeyPem);
+
+        const rawAesKey = await this.rsaOaepService.decryptKey(rsaPrivateKey, encrypted.encryptedKeyBase64);
+
+        const aesKey = await this.aesGcmService.importRawKey(rawAesKey);
+
+        return this.aesGcmService.decrypt(aesKey, encrypted);
+    }
 }

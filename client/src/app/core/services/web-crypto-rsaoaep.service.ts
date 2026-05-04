@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { arrayBufferToBase64, base64ToArrayBuffer } from "../utils/base64.util";
-import { strimPemHeaders } from "../utils/pem.util";
+import { pemToArrayBuffer, exportPrivateKeyToPem, exportPublicKeyToPem } from "../utils/pem.util";
 
 @Injectable({ providedIn: "root" })
 export class WebCryptoRSAOAEPService {
@@ -20,7 +20,7 @@ export class WebCryptoRSAOAEPService {
     async importPublicKeyFromPem(publicKeyPem: string): Promise<CryptoKey> {
         return crypto.subtle.importKey(
             "spki",
-            base64ToArrayBuffer(strimPemHeaders(publicKeyPem)),
+            pemToArrayBuffer(publicKeyPem),
             {
                 name: "RSA-OAEP",
                 hash: "SHA-256"
@@ -28,6 +28,27 @@ export class WebCryptoRSAOAEPService {
             false,
             ["encrypt"]
         );
+    }
+
+    async importPrivateKeyFromPem(privateKeyPem: string): Promise<CryptoKey> {
+        return crypto.subtle.importKey(
+            "pkcs8",
+            pemToArrayBuffer(privateKeyPem),
+            {
+                name: "RSA-OAEP",
+                hash: "SHA-256"
+            },
+            false,
+            ["decrypt"]
+        );
+    }
+
+    async exportPublicKeyToPem(publicKey: CryptoKey): Promise<string> {
+        return exportPublicKeyToPem(publicKey);
+    }
+
+    async exportPrivateKeyToPem(privateKey: CryptoKey): Promise<string> {
+        return exportPrivateKeyToPem(privateKey);
     }
 
     async encryptKey(publicKey: CryptoKey, keyToBeEncypted: ArrayBuffer): Promise<string> {
@@ -40,5 +61,15 @@ export class WebCryptoRSAOAEPService {
         );
 
         return arrayBufferToBase64(encryptedKey);
+    }
+
+    async decryptKey(privateKey: CryptoKey, encryptedKeyBase64: string): Promise<ArrayBuffer> {
+        return crypto.subtle.decrypt(
+            {
+                name: "RSA-OAEP"
+            },
+            privateKey,
+            base64ToArrayBuffer(encryptedKeyBase64)
+        );
     }
 }

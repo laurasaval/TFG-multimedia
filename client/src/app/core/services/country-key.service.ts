@@ -17,4 +17,14 @@ export class CountryKeyService {
 
         return keys.rsaEncryptionPublicKey;
     }
+
+    getCountrySigningPublicKey(countryCode: string): string {
+        const keys = COUNTRY_PUBLIC_KEYS[countryCode as keyof typeof COUNTRY_PUBLIC_KEYS];
+
+        if (!keys) {
+            throw new Error(`No hay claves públicas para el país: ${countryCode}`);
+        }
+
+        return keys.ed25519SigningPublicKey;
+    }
 }

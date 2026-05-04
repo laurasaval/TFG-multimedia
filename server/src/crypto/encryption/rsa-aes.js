@@ -33,7 +33,8 @@ export function encryptJsonForPublicKey(data, publicKeyPem) {
 
 	const cipher = createCipheriv("aes-256-gcm", aesKey, iv);
 	const plaintext = Buffer.from(JSON.stringify(data), "utf-8");
-	const encrypted = Buffer.concat([
+
+	const ciphertext = Buffer.concat([
 		cipher.update(plaintext),
 		cipher.final()
 	]);
@@ -49,11 +50,13 @@ export function encryptJsonForPublicKey(data, publicKeyPem) {
 		aesKey
 	);
 
+	// Lo unimos para que sea compatible con Web Crypto que espera ciphertext + authTag juntos
+	const ciptherTextWithTag = Buffer.concat([ciphertext, authTag]);
+
 	return {
 		encryptedKeyBase64: encryptedAesKey.toString("base64"),
 		ivBase64: iv.toString("base64"),
-		ciphertextBase64: encrypted.toString("base64"),
-		authTagBase64: authTag.toString("base64")
+		ciphertextBase64: ciptherTextWithTag.toString("base64")
 	};
 }
 
@@ -70,10 +73,8 @@ export function decryptJsonWithPrivateKey(encrypted, privateKeyPem, passphrase) 
 
 	const encryptedBuffer = Buffer.from(encrypted.ciphertextBase64, "base64");
 
-	/**
-	 * Web Crypto devuelve ciphertext + authTag juntos.
-	 * En AES-GCM el tag son los últimos 16 bytes.
-	 */
+	// Web Crypto devuelve ciphertext + authTag juntos.
+	// En AES-GCM el tag son los últimos 16 bytes.
 	const authTag = encryptedBuffer.subarray(encryptedBuffer.length - 16);
 	const ciphertext = encryptedBuffer.subarray(0, encryptedBuffer.length - 16);
 

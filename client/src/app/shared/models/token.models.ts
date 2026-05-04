@@ -1,3 +1,5 @@
+import { EncryptedEnvelope } from "./encrypted.model";
+
 export interface VoteTokenRequestPayload {
     voterId: string;
     voterSigningPublicKey: string;
@@ -15,13 +17,13 @@ export interface VoteToken {
     voterSigningPublicKey: string;
     issuedAt: string;
     used: boolean;
-    countrySignature: string;
+    anccSignature: string;
 }
 
 export interface VoteTokenResponse {
     ok: boolean;
     message: string;
-    token: VoteToken;
+    encryptedToken: EncryptedEnvelope;
 }
 
 export interface VoteKeyPair {

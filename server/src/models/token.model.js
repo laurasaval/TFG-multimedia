@@ -1,32 +1,19 @@
 import mongoose from "mongoose";
 
-const tokenSchema = new mongoose.Schema({
-    tokenId: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    token: {
+const encryptedTokenSchema = new mongoose.Schema({
+    encryptedKeyBase64: {
         type: String,
         required: true
     },
-    voterSigningPublicKey: {
+    ivBase64: {
         type: String,
         required: true
     },
-    issuedAt: {
-        type: Date,
-        required: true
-    },
-    anccSignature: {
+    ciphertextBase64: {
         type: String,
         required: true
-    },
-    used: {
-        type: Boolean,
-        default: false
-    },
+    }
 }, { _id: false });
 
-export const TokenModel = mongoose.model("Token", tokenSchema);
-export { tokenSchema };
+export const EncryptedTokenModel = mongoose.model("EncryptedToken", encryptedTokenSchema);
+export { encryptedTokenSchema };
