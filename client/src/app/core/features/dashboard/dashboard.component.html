@@ -56,71 +56,150 @@
             <!-- Open — voting form -->
             <form *ngSwitchCase="'open'" class="vote-form" aria-describedby="vote-instructions">
 
-                <p id="vote-instructions" class="vote-form__help">
-                    Selecciona los países que quieres apoyar y pulsa «Preparar voto» cuando hayas terminado.
-                </p>
+                <ng-container [ngSwitch]="voteStep">
 
-                <fieldset class="vote-form__fieldset">
-                    <legend class="vote-form__legend">Países candidatos</legend>
+                    <!-- Paso 1: selección -->
+                    <ng-container *ngSwitchCase="'selection'">
+                        <p id="vote-instructions" class="vote-form__help">
+                            Selecciona los países que quieres apoyar y pulsa «Preparar voto» cuando hayas terminado.
+                        </p>
 
-                    <div class="country-grid" role="group" aria-label="Lista de países candidatos">
-                        <label class="country-card" *ngFor="let candidate of voting.candidates; trackBy: trackByCountry"
-                            [class.country-card--selected]="selectedCountries.includes(candidate.countryCode)">
-                            <input type="checkbox" class="country-card__input" [value]="candidate.countryCode"
-                                [checked]="selectedCountries.includes(candidate.countryCode)"
-                                [attr.aria-label]="'Seleccionar ' + candidate.countryName + ', actuación número ' + candidate.performanceOrder"
-                                (change)="onCountrySelectionChange(candidate.countryCode, $event)" />
+                        <fieldset class="vote-form__fieldset">
+                            <legend class="vote-form__legend">Países candidatos</legend>
 
-                            <span class="country-card__check" aria-hidden="true"></span>
+                            <div class="country-grid" role="group" aria-label="Lista de países candidatos">
+                                <label class="country-card"
+                                    *ngFor="let candidate of voting.candidates; trackBy: trackByCountry"
+                                    [class.country-card--selected]="selectedCountries.includes(candidate.countryCode)">
+                                    <input type="checkbox" class="country-card__input" [value]="candidate.countryCode"
+                                        [checked]="selectedCountries.includes(candidate.countryCode)"
+                                        [attr.aria-label]="'Seleccionar ' + candidate.countryName + ', actuación número ' + candidate.performanceOrder"
+                                        (change)="onCountrySelectionChange(candidate.countryCode, $event)" />
 
-                            <img class="country-card__thumb" [src]="candidate.thumbnailUrl"
-                                [alt]="candidate.thumbnailAlt" loading="lazy" />
+                                    <span class="country-card__check" aria-hidden="true"></span>
 
-                            <span class="country-card__content">
-                                <span class="country-card__country">
-                                    <span class="fi country-card__flag"
-                                        [ngClass]="'fi-' + candidate.countryCode.toLowerCase()"
-                                        aria-hidden="true"></span>
+                                    <img class="country-card__thumb" [src]="candidate.thumbnailUrl"
+                                        [alt]="candidate.thumbnailAlt" loading="lazy" />
 
-                                    <span class="country-card__name">
-                                        {{ candidate.countryName }}
+                                    <span class="country-card__content">
+                                        <span class="country-card__country">
+                                            <span class="fi country-card__flag"
+                                                [ngClass]="'fi-' + candidate.countryCode.toLowerCase()"
+                                                aria-hidden="true"></span>
+
+                                            <span class="country-card__name">
+                                                {{ candidate.countryName }}
+                                            </span>
+
+                                            <abbr class="country-card__code" [title]="candidate.countryName">
+                                                {{ candidate.countryCode }}
+                                            </abbr>
+                                        </span>
+
+                                        <span class="country-card__artist">
+                                            {{ candidate.singer }}
+                                        </span>
+
+                                        <span class="country-card__song" [attr.lang]="candidate.songTitleLang">
+                                            “{{ candidate.songTitle }}”
+                                        </span>
+
+                                        <button type="button" class="country-card__video"
+                                            (click)="openPerformanceVideo(candidate); $event.preventDefault(); $event.stopPropagation()"
+                                            [disabled]="!candidate.performanceUrl" [attr.aria-label]="candidate.performanceUrl
+                  ? 'Ver actuación de ' + candidate.countryName
+                  : 'No hay vídeo disponible para ' + candidate.countryName">
+                                            Ver actuación
+                                        </button>
                                     </span>
 
-                                    <abbr class="country-card__code" [title]="candidate.countryName">
-                                        {{ candidate.countryCode }}
-                                    </abbr>
+                                    <span class="country-card__order" aria-label="Orden de actuación">
+                                        {{ candidate.performanceOrder | number:'2.0-0' }}
+                                    </span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <button class="btn-primary" type="button" (click)="prepareVote()"
+                            [disabled]="selectedCountries.length === 0">
+                            Preparar voto
+                        </button>
+                    </ng-container>
+
+                    <!-- Paso 2: revisión -->
+                    <ng-container *ngSwitchCase="'review'">
+                        <section class="review-card" aria-labelledby="review-heading">
+                            <div class="review-card__header">
+                                <p class="review-card__eyebrow">Revisión del voto</p>
+
+                                <h3 id="review-heading" class="review-card__title">
+                                    Confirma tu selección antes de enviar
+                                </h3>
+
+                                <p class="review-card__help">
+                                    Revisa los países seleccionados. Si necesitas cambiar algo, puedes volver a la
+                                    selección.
+                                </p>
+                            </div>
+
+                            <div class="review-summary" role="status" aria-live="polite">
+                                <span class="review-summary__number">
+                                    {{ selectedCandidates.length }}
                                 </span>
 
-                                <span class="country-card__artist" [attr.lang]="candidate.singerLang">
-                                    {{ candidate.singer }}
+                                <span class="review-summary__text">
+                                    {{ selectedCandidates.length === 1 ? 'país seleccionado' : 'países seleccionados' }}
                                 </span>
+                            </div>
 
-                                <span class="country-card__song" [attr.lang]="candidate.songTitleLang">
-                                    “{{ candidate.songTitle }}”
-                                </span>
+                            <ol class="review-list" aria-label="Países seleccionados para votar">
+                                <li class="review-item"
+                                    *ngFor="let candidate of selectedCandidates; trackBy: trackByCountry">
+                                    <img class="review-item__thumb" [src]="candidate.thumbnailUrl"
+                                        [alt]="candidate.thumbnailAlt" loading="lazy" />
 
-                                <button type="button" class="country-card__video"
-                                    (click)="openPerformanceVideo(candidate); $event.preventDefault(); $event.stopPropagation()"
-                                    [disabled]="!candidate.performanceUrl" [attr.aria-label]="candidate.performanceUrl
-          ? 'Ver actuación de ' + candidate.countryName
-          : 'No hay vídeo disponible para ' + candidate.countryName">
-                                    Ver actuación
+                                    <div class="review-item__content">
+                                        <p class="review-item__country">
+                                            <span class="fi review-item__flag"
+                                                [ngClass]="'fi-' + candidate.countryCode.toLowerCase()"
+                                                aria-hidden="true"></span>
+
+                                            <span>{{ candidate.countryName }}</span>
+
+                                            <abbr class="review-item__code" [title]="candidate.countryName">
+                                                {{ candidate.countryCode }}
+                                            </abbr>
+                                        </p>
+
+                                        <p class="review-item__meta">
+                                            {{ candidate.singer }}
+                                        </p>
+
+                                        <p class="review-item__song" [attr.lang]="candidate.songTitleLang">
+                                            “{{ candidate.songTitle }}”
+                                        </p>
+                                    </div>
+
+                                    <span class="review-item__order">
+                                        {{ candidate.performanceOrder | number:'2.0-0' }}
+                                    </span>
+                                </li>
+                            </ol>
+
+                            <div class="review-actions">
+                                <button type="button" class="btn-secondary" (click)="backToSelection()">
+                                    Volver a editar
                                 </button>
-                            </span>
 
-                            <span class="country-card__order" aria-label="Orden de actuación">
-                                {{ candidate.performanceOrder | number:'2.0-0' }}
-                            </span>
-                        </label>
-                    </div>
-                </fieldset>
+                                <button type="button" class="btn-primary" (click)="confirmVote()">
+                                    Confirmar voto
+                                </button>
+                            </div>
+                        </section>
+                    </ng-container>
 
-                <button class="btn-primary" type="button" (click)="prepareVote()"
-                    [disabled]="selectedCountries.length === 0">
-                    Preparar voto
-                </button>
+                </ng-container>
             </form>
-
         </ng-container>
     </section>
     <div *ngIf="selectedPerformance" class="video-modal" role="dialog" aria-modal="true"

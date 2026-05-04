@@ -15,6 +15,7 @@ import "flag-icons/css/flag-icons.min.css";
 
 
 type VotingState = 'not-started' | 'open' | 'closed';
+type VoteStep = 'selection' | 'review';
 
 interface SelectedPerformanceVideo {
   countryCode: string;
@@ -31,6 +32,7 @@ interface SelectedPerformanceVideo {
 export class DashboardComponent implements OnInit, OnDestroy {
   voting: VotingConfig | null = null;
   votingState: VotingState | null = null;
+  voteStep: VoteStep = 'selection';
   selectedPerformance: SelectedPerformanceVideo | null = null;
 
   selectedCountries: string[] = [];
@@ -133,7 +135,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  async prepareVote(): Promise<void> {
+  async confirmVote(): Promise<void> {
     try {
       this.errorMessage = "";
       this.successMessage = "";
@@ -149,6 +151,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.errorMessage = error?.message ?? "No se pudo preparar el voto";
     }
+  }
+
+  prepareVote(): void {
+    if (this.selectedCountries.length === 0) { return; }
+
+    this.voteStep = 'review';
+  }
+
+  backToSelection(): void {
+    this.voteStep = 'selection';
+  }
+
+  get selectedCandidates() {
+    if (!this.voting?.candidates) {
+      return [];
+    }
+
+    return this.voting.candidates.filter(candidate =>
+      this.selectedCountries.includes(candidate.countryCode)
+    );
   }
 
   trackByCountry(_index: number, candidate: { countryCode: string }): string {

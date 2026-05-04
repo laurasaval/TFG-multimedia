@@ -8,6 +8,11 @@ import { IdentityKeyService } from '../../services/identity-key.service';
 import { SessionService } from '../../services/session.service';
 import { TokenService } from '../../services/token.service';
 
+interface LoginBackgroundImage {
+  url: string;
+  alt: string;
+}
+
 @Component({
   selector: 'app-login',
   imports: [CommonModule, FormsModule],
@@ -21,6 +26,34 @@ export class LoginComponent {
   errorMessage = '';
   loading = false;
 
+  activeBackgroundIndex = 0;
+
+  backgroundImages: LoginBackgroundImage[] = [
+    {
+      url: 'assets/performances/es.webp',
+      alt: 'Actuación con iluminación cálida en un escenario musical'
+    },
+    {
+      url: 'assets/performances/fr.webp',
+      alt: 'Actuación en escenario oscuro con luces de concierto'
+    },
+    {
+      url: 'assets/performances/it.webp',
+      alt: 'Cantante interpretando una canción bajo focos de colores'
+    },
+    {
+      url: 'assets/performances/pt.webp',
+      alt: 'Grupo vocal actuando con iluminación escénica cálida'
+    },
+    {
+      url: 'assets/performances/de.webp',
+      alt: 'Grupo vocal actuando con iluminación escénica cálida'
+    }
+  ];
+
+  private carouselIntervalId: ReturnType<typeof setInterval> | undefined;
+  private readonly carouselDelayMs = 3000;
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -28,6 +61,27 @@ export class LoginComponent {
     private sessionService: SessionService,
     private tokenService: TokenService
   ) { }
+
+  ngOnInit(): void {
+    if (this.shouldReduceMotion()) {
+      return;
+    }
+
+    this.carouselIntervalId = setInterval(() => {
+      this.activeBackgroundIndex =
+        (this.activeBackgroundIndex + 1) % this.backgroundImages.length;
+    }, this.carouselDelayMs);
+  }
+
+  ngOnDestroy(): void {
+    if (this.carouselIntervalId) {
+      clearInterval(this.carouselIntervalId);
+    }
+  }
+
+  private shouldReduceMotion(): boolean {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
 
   async onPemSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
