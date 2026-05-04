@@ -123,18 +123,11 @@ export class TokenService {
             used: token.used
         };
 
-        console.log("token descifrado:", token);
-        console.log("countrySignature:", token.anccSignature);
-        console.log("typeof countrySignature:", typeof token.anccSignature);
-
         const isValid = await this.cryptoService.verifySignature(
             publicKey,
             canonicalJson(signedPayload),
             token.anccSignature
         );
-
-        console.log("holaaa, estoy aqui");
-        console.log("la fima es valida?", isValid);
 
         if (!isValid) {
             throw new Error("La firma del token no es válida");
