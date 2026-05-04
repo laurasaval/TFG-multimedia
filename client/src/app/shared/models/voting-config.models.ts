@@ -2,6 +2,13 @@ export interface Candidate {
     countryCode: string;
     countryName: string;
     performanceUrl?: string;
+    performanceOrder: number;
+    songTitle: string;
+    songTitleLang: string;
+    singer: string;
+    singerLang: string;
+    thumbnailUrl: string;
+    thumbnailAlt: string;
 }
 
 export interface VotingConfig {

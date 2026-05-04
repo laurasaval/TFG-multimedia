@@ -7,27 +7,62 @@
         {
             "countryCode": "ES",
             "countryName": "España",
-            "performanceUrl": "https://youtu.be/jSQYTt4xg3I?si=LUMFwG_tQHGHyTQp"
+            "performanceUrl": "https://youtu.be/jSQYTt4xg3I?si=LUMFwG_tQHGHyTQp",
+            "performanceOrder": 1,
+            "songTitle": "SloMo",
+            "songTitleLang": "es",
+            "singer": "Chanel",
+            "singerLang": "es",
+            "thumbnailUrl": "/assets/performances/es.webp",
+            "thumbnailAlt": "Chanel sobre el escenario con bailarines y una iluminación amarilla intensa"
         },
         {
             "countryCode": "FR",
             "countryName": "Francia",
-            "performanceUrl": "https://youtu.be/ujoCYrvvTYQ?si=V9uwj6Xti2Xb2DxX"
+            "performanceUrl": "https://youtu.be/ujoCYrvvTYQ?si=V9uwj6Xti2Xb2DxX",
+            "performanceOrder": 2,
+            "songTitle": "Regarde !",
+            "songTitleLang": "fr",
+            "singer": "Monroe",
+            "singerLang": "fr",
+            "thumbnailUrl": "/assets/performances/fr.webp",
+            "thumbnailAlt": "Monroe actuando en un escenario oscuro con bailarines al fondo"
         },
         {
             "countryCode": "DE",
             "countryName": "Alemania",
-            "performanceUrl": "https://youtu.be/AzvRc3eH_rA?si=pIKde8czblMSfYBT"
+            "performanceUrl": "https://youtu.be/AzvRc3eH_rA?si=pIKde8czblMSfYBT",
+            "performanceOrder": 3,
+            "songTitle": "Fire",
+            "songTitleLang": "en",
+            "singer": "Sarah Engels",
+            "singerLang": "de",
+            "thumbnailUrl": "/assets/performances/de.webp",
+            "thumbnailAlt": "Engels actuando con bailarinas entre llamas sobre un fondo rojo intenso"
         },
         {
             "countryCode": "IT",
             "countryName": "Italia",
-            "performanceUrl": "https://youtu.be/V406FAGkhyQ?si=vrZDhvO2hp0-xha2"
+            "performanceUrl": "https://youtu.be/V406FAGkhyQ?si=vrZDhvO2hp0-xha2",
+            "performanceOrder": 4,
+            "songTitle": "Per sempre sì",
+            "songTitleLang": "it",
+            "singer": "Sal Da Vinci",
+            "singerLang": "it",
+            "thumbnailUrl": "/assets/performances/it.webp",
+            "thumbnailAlt": "Sal Da Vinci cantando con micrófono ante un fondo de luces azules, rojas y naranjas"
         },
         {
             "countryCode": "PT",
             "countryName": "Portugal",
-            "performanceUrl": "https://youtu.be/jyHaE6GqaaQ?si=WrUr3yhE-ZB6AlIR"
+            "performanceUrl": "https://youtu.be/jyHaE6GqaaQ?si=WrUr3yhE-ZB6AlIR",
+            "performanceOrder": 5,
+            "songTitle": "Rosa",
+            "songTitleLang": "pt",
+            "singer": "Bandidos do Cante",
+            "singerLang": "pt",
+            "thumbnailUrl": "/assets/performances/pt.webp",
+            "thumbnailAlt": "Bandidos do Cante cantando juntos en un escenario con iluminación cálida"
         }
     ]
 }

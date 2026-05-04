@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Candidate } from '../../../shared/models/voting-config.models';
+import "flag-icons/css/flag-icons.min.css";
 
 
 type VotingState = 'not-started' | 'open' | 'closed';

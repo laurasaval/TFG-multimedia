@@ -15,6 +15,34 @@ const candidateSchema = new mongoose.Schema({
     performanceUrl: {
         type: String,
         required: false
+    },
+    performanceOrder: {
+        type: Number,
+        required: true
+    },
+    songTitle: {
+        type: String,
+        required: true
+    },
+    songTitleLang: {
+        type: String,
+        required: true
+    },
+    singer: {
+        type: String,
+        required: true
+    },
+    singerLang: {
+        type: String,
+        required: true
+    },
+    thumbnailUrl: {
+        type: String,
+        required: true
+    },
+    thumbnailAlt: {
+        type: String,
+        required: true
     }
 }, {
     _id: false
