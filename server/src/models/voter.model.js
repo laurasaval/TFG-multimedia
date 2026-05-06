@@ -25,7 +25,6 @@ const voterSchema = new mongoose.Schema({
         required: false
     }
 }, {
-    _id: false,
     timestamps: {
         createdAt: "registeredAt",
         updatedAt: "updatedAt"

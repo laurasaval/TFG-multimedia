@@ -202,6 +202,190 @@
             </form>
         </ng-container>
     </section>
+
+    <!-- P2P connection process -->
+    <section *ngIf="voteStep === 'p2p' || waitingState || roundState || connectionEvents.length > 0" class="p2p-section"
+        aria-labelledby="p2p-heading">
+
+        <div class="p2p-header">
+            <p class="p2p-eyebrow">Red P2P</p>
+            <h2 id="p2p-heading" class="p2p-title">
+                Conexión a la red de votantes
+            </h2>
+            <p class="p2p-subtitle">
+                La ANCC solo coordina la señalización inicial. La comunicación entre votantes se establece mediante
+                WebRTC.
+            </p>
+            <h1>CONTADOR</h1>
+            <p class="p2p-subtitle">Esperando {{ waitingState?.waitingCount }} de {{ waitingState?.requiredCount }}</p>
+        </div>
+
+        <ol class="p2p-steps" aria-label="Estado de conexión P2P">
+            <li class="p2p-step" [class.p2p-step--done]="encryptedVote"
+                [class.p2p-step--active]="voteStep === 'review'">
+                <span class="p2p-step__number">1</span>
+                <span class="p2p-step__content">
+                    <strong>Voto cifrado</strong>
+                    <small>El voto se cifra localmente con AES-GCM.</small>
+                </span>
+            </li>
+
+            <li class="p2p-step" [class.p2p-step--done]="waitingState || roundState"
+                [class.p2p-step--active]="joiningP2P && !waitingState">
+                <span class="p2p-step__number">2</span>
+                <span class="p2p-step__content">
+                    <strong>Conexión a señalización</strong>
+                    <small>El navegador abre un único WebSocket con la ANCC.</small>
+                </span>
+            </li>
+
+            <li class="p2p-step" [class.p2p-step--done]="roundState"
+                [class.p2p-step--active]="waitingState && !roundState">
+                <span class="p2p-step__number">3</span>
+                <span class="p2p-step__content">
+                    <strong>Sala de espera</strong>
+                    <small>Esperando suficientes votantes para crear la ronda.</small>
+                </span>
+            </li>
+
+            <li class="p2p-step" [class.p2p-step--done]="roundState" [class.p2p-step--active]="roundState">
+                <span class="p2p-step__number">4</span>
+                <span class="p2p-step__content">
+                    <strong>Ronda WebRTC</strong>
+                    <small>Los nodos calculan roles y abren canales P2P.</small>
+                </span>
+            </li>
+        </ol>
+
+        <div *ngIf="waitingState && !roundState" class="p2p-waiting-card" role="status" aria-live="polite">
+            <div class="p2p-waiting-card__header">
+                <h3>Sala de espera</h3>
+                <strong>{{ waitingState.waitingCount }} / {{ waitingState.requiredCount }}</strong>
+            </div>
+
+            <div class="p2p-progress" aria-hidden="true">
+                <span class="p2p-progress__bar"
+                    [style.width.%]="(waitingState.waitingCount / waitingState.requiredCount) * 100">
+                </span>
+            </div>
+
+            <ul class="p2p-peer-list">
+                <li *ngFor="let peer of waitingState.peers">
+                    <span>{{ peer.peerId }}</span>
+                </li>
+            </ul>
+        </div>
+
+        <div *ngIf="roundState" class="p2p-round-card">
+            <div class="p2p-round-grid">
+                <article>
+                    <span class="p2p-round-label">Ronda</span>
+                    <strong>{{ roundState.roundNumber }}</strong>
+                </article>
+
+                <article>
+                    <span class="p2p-round-label">Mi nodo</span>
+                    <strong>{{ roundState.ownPeerId }}</strong>
+                </article>
+
+                <article>
+                    <span class="p2p-round-label">Secretario</span>
+                    <strong>{{ roundState.roles.secretary.peerId }}</strong>
+                </article>
+
+                <article>
+                    <span class="p2p-round-label">Jefe</span>
+                    <strong>{{ roundState.roles.president.peerId }}</strong>
+                </article>
+            </div>
+
+            <div class="p2p-hash">
+                <span>Hash del último bloque calculado localmente</span>
+                <code>{{ roundState.lastBlockHash }}</code>
+            </div>
+        </div>
+
+        <div *ngIf="connectionEvents.length > 0" class="p2p-events">
+            <h3>Eventos WebRTC</h3>
+
+            <ul>
+                <li *ngFor="let event of connectionEvents">
+                    <span>{{ event.peerId }}</span>
+                    <strong>{{ event.state }}</strong>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- P2P graph -->
+    <section *ngIf="roundState" class="p2p-graph-section" aria-labelledby="p2p-graph-heading">
+
+        <div class="p2p-header">
+            <p class="p2p-eyebrow">Grafo en tiempo real</p>
+            <h2 id="p2p-graph-heading" class="p2p-title">
+                Red WebRTC de la ronda
+            </h2>
+            <p class="p2p-subtitle">
+                Cada nodo representa un votante. Las líneas representan canales P2P previstos o establecidos.
+            </p>
+        </div>
+
+        <div class="p2p-graph" role="img" aria-label="Grafo de la red P2P de la ronda actual">
+            <svg class="p2p-graph__svg" viewBox="0 0 600 420" preserveAspectRatio="xMidYMid meet">
+
+                <line *ngFor="let edge of graphEdges" class="p2p-graph__edge" [attr.x1]="edge.x1" [attr.y1]="edge.y1"
+                    [attr.x2]="edge.x2" [attr.y2]="edge.y2">
+                </line>
+
+                <g *ngFor="let node of graphNodes" class="p2p-graph__node" [class.p2p-graph__node--self]="node.isSelf"
+                    [class.p2p-graph__node--secretary]="node.role === 'secretary'"
+                    [class.p2p-graph__node--president]="node.role === 'president'"
+                    [attr.transform]="'translate(' + node.x + ',' + node.y + ')'">
+
+                    <circle r="34"></circle>
+
+                    <text class="p2p-graph__node-role" text-anchor="middle" y="16">
+                        {{ node.roleLabel }}
+                    </text>
+                </g>
+            </svg>
+
+            <aside class="p2p-graph__legend">
+                <div>
+                    <span class="legend-dot legend-dot--self"></span>
+                    Mi nodo
+                </div>
+
+                <div>
+                    <span class="legend-dot legend-dot--secretary"></span>
+                    Secretario
+                </div>
+
+                <div>
+                    <span class="legend-dot legend-dot--president"></span>
+                    Presidente
+                </div>
+
+                <div>
+                    <span class="legend-dot"></span>
+                    Votante
+                </div>
+            </aside>
+        </div>
+
+        <div *ngIf="p2pMessages.length > 0" class="p2p-messages">
+            <h3>Mensajes P2P recibidos</h3>
+
+            <ul>
+                <li *ngFor="let message of p2pMessages">
+                    <strong>{{ message.fromPeerId }}</strong>
+                    <pre>{{ message.data | json }}</pre>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Modal videoclip -->
     <div *ngIf="selectedPerformance" class="video-modal" role="dialog" aria-modal="true"
         aria-labelledby="video-modal-title" aria-describedby="video-modal-description"
         (click)="closePerformanceVideo()">

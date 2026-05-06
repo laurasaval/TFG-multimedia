@@ -12,10 +12,15 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Candidate } from '../../../shared/models/voting-config.models';
 import "flag-icons/css/flag-icons.min.css";
+import { LocalRoundState } from '../../../shared/models/p2p.models';
+import { P2PNetworkService } from '../../services/p2p-network.service';
+import { SessionService } from '../../services/session.service';
+import { Subscription } from 'rxjs';
+import { API_CONFIG } from '../../config/api.config';
 
-
+// TODO: mover e importar
 type VotingState = 'not-started' | 'open' | 'closed';
-type VoteStep = 'selection' | 'review';
+type VoteStep = 'selection' | 'review' | 'p2p';
 
 interface SelectedPerformanceVideo {
   countryCode: string;
@@ -47,21 +52,56 @@ export class DashboardComponent implements OnInit, OnDestroy {
   errorMessage = "";
   successMessage = "";
 
+  loadingVoting = false;
+  preparingVote = false;
+  joiningP2P = false;
+
+  waitingState: any | null = null;
+  roundState: LocalRoundState | null = null;
+  connectionEvents: any[] = [];
+  p2pMessages: any[] = [];
+  p2pError: string | null = null;
+
+  private subscriptions: Subscription[] = [];
+
+  graphNodes: Array<{
+    peerId: string;
+    x: number;
+    y: number;
+    role: 'self' | 'secretary' | 'president' | 'voter';
+    roleLabel: string;
+    isSelf: boolean;
+  }> = [];
+
+  graphEdges: Array<{
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  }> = [];
+
   constructor(
     private authService: AuthService,
     private router: Router,
     private votingConfigService: VotingConfigService,
     private voteService: VoteService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private sessionService: SessionService,
+    private p2pNetworkService: P2PNetworkService
   ) { }
 
   async ngOnInit() {
+    this.subscribeToP2PState();
     await this.loadVotingConfig();
   }
 
   ngOnDestroy(): void {
     if (this.intervalId !== null) {
       window.clearInterval(this.intervalId);
+    }
+
+    for (const subscription of this.subscriptions) {
+      subscription.unsubscribe();
     }
   }
 
@@ -147,10 +187,88 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.votePlain = this.voteService.prepareVotePlain(this.selectedCountries);
       [this.encryptedVote, this.symmetricKey] = await this.voteService.encryptVote(this.votePlain);
 
-      this.successMessage = "Voto preparado correctamente";
+      this.voteStep = 'p2p';
+      this.successMessage = "Voto preparado correctamente. Conectando a la red P2P...";
+
+      this.joinP2PAfterVotePrepared();
     } catch (error: any) {
       this.errorMessage = error?.message ?? "No se pudo preparar el voto";
+    } finally {
+      this.preparingVote = false;
     }
+  }
+
+  sendTestP2PMessage(): void {
+    this.p2pNetworkService.broadcastTestMessage();
+  }
+
+  private joinP2PAfterVotePrepared(): void {
+    const sessionToken = this.sessionService.getSessionToken();
+
+    console.log(sessionToken);
+
+    if (!sessionToken) {
+      throw new Error("No hay sesión activa");
+    }
+
+    const voterRaw = localStorage.getItem("tfg_voter");
+
+    if (!voterRaw) {
+      throw new Error("No hay votante autenticado");
+    }
+
+    const voter = JSON.parse(voterRaw);
+
+    if (!voter.voterId) {
+      throw new Error("No se pudo obtener el voterId");
+    }
+
+    this.joiningP2P = true;
+
+    const wsUrl = this.getSignalingUrl();
+
+    this.p2pNetworkService.connectAndJoin({
+      wsUrl,
+      sessionToken,
+      voterId: voter.voterId
+    });
+  }
+
+  private subscribeToP2PState(): void {
+    this.p2pNetworkService.waitingState$.subscribe((state) => {
+      this.waitingState = state;
+    });
+
+    this.p2pNetworkService.roundState$.subscribe((state) => {
+      this.roundState = state;
+
+      if (state) {
+        this.joiningP2P = false;
+        this.voteStep = 'p2p';
+        this.successMessage = 'Ronda P2P creada correctamente';
+        this.buildP2PGraph();
+      }
+    });
+
+    this.p2pNetworkService.connectionEvents$.subscribe((events) => {
+      this.connectionEvents = events;
+
+      if (this.roundState) {
+        this.buildP2PGraph();
+      }
+    });
+
+    this.p2pNetworkService.p2pMessages$.subscribe((messages) => {
+      this.p2pMessages = messages;
+    });
+
+    this.p2pNetworkService.error$.subscribe((error) => {
+      this.p2pError = error;
+
+      if (error) {
+        this.joiningP2P = false;
+      }
+    });
   }
 
   prepareVote(): void {
@@ -222,5 +340,78 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
 
     return match ? match[1] : null;
+  }
+
+  private getSignalingUrl(): string {
+    return API_CONFIG.WS_URL;
+  }
+
+  private buildP2PGraph(): void {
+    if (!this.roundState) {
+      this.graphNodes = [];
+      this.graphEdges = [];
+      return;
+    }
+
+    const peers = this.roundState.peers;
+    const ownPeerId = this.roundState.ownPeerId;
+    const secretaryPeerId = this.roundState.roles.secretary.peerId;
+    const presidentPeerId = this.roundState.roles.president.peerId
+    const total = peers.length;
+
+    const centerX = 300;
+    const centerY = 210;
+    const radius = 145;
+
+    this.graphNodes = peers.map((peer: any, index: number) => {
+      const angle = (2 * Math.PI * index) / total - Math.PI / 2;
+
+      const isSelf = peer.peerId === ownPeerId;
+      const isSecretary = peer.peerId === secretaryPeerId;
+      const isPresident = peer.peerId === presidentPeerId;
+
+      let role: 'self' | 'secretary' | 'president' | 'voter' = 'voter';
+      let roleLabel = 'Votante';
+
+      if (isSelf) {
+        role = 'self';
+        roleLabel = 'Yo';
+      }
+
+      if (isSecretary) {
+        role = 'secretary';
+        roleLabel = 'Sec.';
+      }
+
+      if (isPresident) {
+        role = 'president';
+        roleLabel = 'Presidente';
+      }
+
+      return {
+        peerId: peer.peerId,
+        countryCode: peer.countryCode,
+        x: centerX + radius * Math.cos(angle),
+        y: centerY + radius * Math.sin(angle),
+        role,
+        roleLabel,
+        isSelf
+      };
+    });
+
+    const edges: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
+
+    for (let i = 0; i < this.graphNodes.length; i++) {
+      for (let j = i + 1; j < this.graphNodes.length; j++) {
+        edges.push({
+          x1: this.graphNodes[i].x,
+          y1: this.graphNodes[i].y,
+          x2: this.graphNodes[j].x,
+          y2: this.graphNodes[j].y
+        });
+      }
+    }
+
+    this.graphEdges = edges;
   }
 }

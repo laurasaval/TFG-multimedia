@@ -1710,3 +1710,492 @@
         grid-area: order;
     }
 }
+
+/* ==========================================================================
+   P2P connection process
+   ========================================================================== */
+
+.p2p-section,
+.p2p-graph-section {
+    position: relative;
+
+    display: grid;
+    gap: 1.35rem;
+
+    padding:
+        clamp(2rem, 4vh, 2.7rem) clamp(1.25rem, 3vw, 2.35rem);
+
+    border: 1px solid rgba(255, 250, 247, 0.16);
+    border-radius: var(--radius-card);
+
+    background:
+        radial-gradient(circle at 18% 0%, rgba(94, 231, 255, 0.12), transparent 12rem),
+        radial-gradient(circle at 100% 92%, rgba(255, 79, 163, 0.08), transparent 14rem),
+        linear-gradient(180deg, rgba(255, 250, 247, 0.085), rgba(255, 250, 247, 0.04)),
+        var(--surface-deep);
+
+    box-shadow: var(--shadow-card);
+
+    backdrop-filter: blur(1.2rem) saturate(1.04);
+    -webkit-backdrop-filter: blur(1.2rem) saturate(1.04);
+
+    overflow: hidden;
+}
+
+.p2p-header {
+    text-align: center;
+}
+
+.p2p-eyebrow {
+    margin: 0 0 0.35rem;
+
+    color: var(--cyan);
+
+    font-size: 0.78rem;
+    line-height: 1.3;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.p2p-title {
+    margin: 0;
+
+    color: var(--text-title);
+
+    font-size: clamp(1.35rem, 4vw, 2rem);
+    line-height: 1.1;
+    font-weight: 950;
+    letter-spacing: -0.04em;
+}
+
+.p2p-subtitle {
+    max-inline-size: 42rem;
+    margin: 0.6rem auto 0;
+
+    color: var(--text-muted);
+
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+/* Steps */
+
+.p2p-steps {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.p2p-step {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+
+    padding: 0.9rem 1rem;
+
+    border: 1px solid rgba(255, 250, 247, 0.12);
+    border-radius: var(--radius-md);
+
+    background: rgba(8, 10, 34, 0.54);
+
+    transition:
+        border-color 180ms ease,
+        background 180ms ease,
+        box-shadow 180ms ease,
+        transform 180ms ease;
+}
+
+.p2p-step--active {
+    border-color: rgba(94, 231, 255, 0.52);
+    background: rgba(94, 231, 255, 0.08);
+
+    box-shadow:
+        0 0 0 1px rgba(94, 231, 255, 0.1),
+        0 0 1.25rem rgba(94, 231, 255, 0.16);
+}
+
+.p2p-step--done {
+    border-color: rgba(143, 245, 220, 0.42);
+    background: rgba(143, 245, 220, 0.08);
+}
+
+.p2p-step__number {
+    flex: 0 0 auto;
+
+    display: grid;
+    place-items: center;
+
+    inline-size: 2rem;
+    block-size: 2rem;
+
+    border-radius: 50%;
+
+    background: rgba(255, 250, 247, 0.1);
+    color: var(--text);
+
+    font-size: 0.9rem;
+    font-weight: 950;
+}
+
+.p2p-step--active .p2p-step__number {
+    background: var(--cyan);
+    color: var(--bg-night);
+}
+
+.p2p-step--done .p2p-step__number {
+    background: var(--success);
+    color: var(--bg-night);
+}
+
+.p2p-step__content {
+    display: grid;
+    gap: 0.18rem;
+
+    strong {
+        color: var(--text);
+        font-size: 0.95rem;
+        line-height: 1.2;
+    }
+
+    small {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        line-height: 1.35;
+    }
+}
+
+/* Waiting room */
+
+.p2p-waiting-card,
+.p2p-round-card,
+.p2p-events,
+.p2p-messages {
+    padding: 1rem;
+
+    border: 1px solid rgba(255, 250, 247, 0.12);
+    border-radius: var(--radius-md);
+
+    background: rgba(8, 10, 34, 0.56);
+}
+
+.p2p-waiting-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+
+    h3 {
+        margin: 0;
+        color: var(--text);
+        font-size: 1rem;
+    }
+
+    strong {
+        color: var(--gold);
+        font-size: 1.1rem;
+    }
+}
+
+.p2p-progress {
+    block-size: 0.75rem;
+
+    margin-block: 1rem;
+
+    border-radius: var(--radius-pill);
+    background: rgba(255, 250, 247, 0.12);
+
+    overflow: hidden;
+}
+
+.p2p-progress__bar {
+    display: block;
+
+    block-size: 100%;
+
+    border-radius: inherit;
+
+    background:
+        linear-gradient(90deg, var(--pink), var(--gold), var(--cyan));
+
+    transition: width 220ms ease;
+}
+
+.p2p-peer-list {
+    display: grid;
+    gap: 0.5rem;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+
+    li {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+
+        padding: 0.65rem 0;
+
+        border-block-end: 1px solid rgba(255, 250, 247, 0.08);
+    }
+
+    span {
+        color: var(--text);
+        font-weight: 800;
+    }
+
+    small {
+        color: var(--cyan);
+        font-weight: 800;
+    }
+}
+
+/* Round */
+
+.p2p-round-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+.p2p-round-grid article {
+    padding: 0.9rem;
+
+    border: 1px solid rgba(255, 250, 247, 0.1);
+    border-radius: var(--radius-sm);
+
+    background: rgba(255, 250, 247, 0.04);
+
+    strong {
+        display: block;
+
+        margin-block-start: 0.2rem;
+
+        color: var(--text);
+        font-size: 0.92rem;
+        line-height: 1.25;
+        word-break: break-all;
+    }
+}
+
+.p2p-round-label {
+    color: var(--text-muted);
+
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.p2p-hash {
+    margin-block-start: 1rem;
+
+    display: grid;
+    gap: 0.35rem;
+
+    span {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    code {
+        display: block;
+
+        padding: 0.75rem;
+
+        border-radius: var(--radius-sm);
+
+        background: rgba(0, 0, 0, 0.22);
+        color: var(--gold);
+
+        font-size: 0.78rem;
+        line-height: 1.45;
+        word-break: break-all;
+    }
+}
+
+/* Events */
+
+.p2p-events h3,
+.p2p-messages h3 {
+    margin: 0 0 0.75rem;
+
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.p2p-events ul,
+.p2p-messages ul {
+    display: grid;
+    gap: 0.5rem;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.p2p-events li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+
+    padding: 0.65rem 0;
+
+    border-block-end: 1px solid rgba(255, 250, 247, 0.08);
+
+    span {
+        color: var(--text);
+        font-weight: 700;
+    }
+
+    strong {
+        color: var(--success);
+        font-size: 0.85rem;
+    }
+}
+
+.p2p-messages li {
+    display: grid;
+    gap: 0.4rem;
+
+    padding: 0.75rem 0;
+
+    border-block-end: 1px solid rgba(255, 250, 247, 0.08);
+
+    strong {
+        color: var(--cyan);
+    }
+
+    pre {
+        margin: 0;
+        padding: 0.75rem;
+
+        border-radius: var(--radius-sm);
+
+        background: rgba(0, 0, 0, 0.25);
+        color: var(--text-soft);
+
+        overflow-x: auto;
+    }
+}
+
+/* Graph */
+
+.p2p-graph {
+    display: grid;
+    gap: 1rem;
+}
+
+.p2p-graph__svg {
+    inline-size: 100%;
+    min-block-size: 22rem;
+
+    border: 1px solid rgba(255, 250, 247, 0.12);
+    border-radius: var(--radius-md);
+
+    background:
+        radial-gradient(circle at 50% 50%, rgba(94, 231, 255, 0.08), transparent 12rem),
+        rgba(8, 10, 34, 0.58);
+}
+
+.p2p-graph__edge {
+    stroke: rgba(255, 250, 247, 0.22);
+    stroke-width: 1.5;
+}
+
+.p2p-graph__node circle {
+    fill: rgba(255, 250, 247, 0.1);
+    stroke: rgba(255, 250, 247, 0.42);
+    stroke-width: 2;
+
+    filter: drop-shadow(0 0.4rem 0.75rem rgba(0, 0, 0, 0.35));
+}
+
+.p2p-graph__node--self circle {
+    fill: rgba(94, 231, 255, 0.22);
+    stroke: var(--cyan);
+}
+
+.p2p-graph__node--secretary circle {
+    fill: rgba(143, 245, 220, 0.18);
+    stroke: var(--success);
+}
+
+.p2p-graph__node--president circle {
+    fill: rgba(255, 240, 106, 0.18);
+    stroke: var(--gold);
+}
+
+.p2p-graph__node-code {
+    fill: var(--text);
+    font-size: 0.95rem;
+    font-weight: 950;
+}
+
+.p2p-graph__node-role {
+    fill: var(--text-muted);
+    font-size: 0.62rem;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+.p2p-graph__legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem 1.1rem;
+
+    color: var(--text-muted);
+
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.p2p-graph__legend div {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.legend-dot {
+    inline-size: 0.8rem;
+    block-size: 0.8rem;
+
+    border-radius: 50%;
+
+    background: rgba(255, 250, 247, 0.42);
+}
+
+.legend-dot--self {
+    background: var(--cyan);
+}
+
+.legend-dot--secretary {
+    background: var(--success);
+}
+
+.legend-dot--president {
+    background: var(--gold);
+}
+
+@media (min-width: 48rem) {
+    .p2p-steps {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .p2p-step {
+        align-items: flex-start;
+    }
+
+    .p2p-round-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}

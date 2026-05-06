@@ -1,0 +1,21 @@
+export const SIGNALING_TYPES = {
+    JOIN_WAITING_ROOM: "JOIN_WAITING_ROOM",
+
+    WAITING_ROOM_UPDATE: "WAITING_ROOM_UPDATE",
+    ROUND_CREATED: "ROUND_CREATED",
+
+    WEBRTC_OFFER: "WEBRTC_OFFER",
+    WEBRTC_ANSWER: "WEBRTC_ANSWER",
+    WEBRTC_ICE_CANDIDATE: "WEBRTC_ICE_CANDIDATE",
+
+    PEER_DISCONNECTED: "PEER_DISCONNECTED",
+    ERROR: "ERROR",
+
+    P2P_TEST: "P2P_TEST"
+}
+
+export function sendJson(ws, message) {
+    if (ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify(message));
+    }
+}

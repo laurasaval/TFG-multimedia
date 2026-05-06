@@ -5,7 +5,7 @@ import path from "path";
 import { connectToDatabase, disconnectFromDatabase } from "../src/data/database.js";
 import { VoterModel } from "../src/models/voter.model.js";
 import { hashSecretCode } from "../src/crypto/hashing/argon2id.js";
-import { generateEd22519KeyPair } from "../src/crypto/signatures/ed22519.js";
+import { generateEd25519KeyPair } from "../src/crypto/signatures/ed22519.js";
 import { getVoterKeysPath } from "../src/config/paths.js";
 
 const country = process.argv[2];
@@ -25,7 +25,7 @@ if (result.error) {
 async function createVoter() {
     await connectToDatabase(String(process.env.DATABASE_URI));
     const hashedSecretCode = await hashSecretCode("123456");
-    const { publicKey, privateKey } = generateEd22519KeyPair();
+    const { publicKey, privateKey } = generateEd25519KeyPair();
 
     const voter = new VoterModel({
         voterId: `${country}-12345678`,
