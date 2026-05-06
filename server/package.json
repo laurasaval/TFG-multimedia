@@ -36,7 +36,9 @@
     "keys:de": "node scripts/generate-country-keys.js de",
     "keys-encryption:es": "node scripts/generate-country-encryption-keys.js es",
     "keys-encryption:fr": "node scripts/generate-country-encryption-keys.js fr",
-    "keys-encryption:de": "node scripts/generate-country-encryption-keys.js de"
+    "keys-encryption:de": "node scripts/generate-country-encryption-keys.js de",
+    "demo-voters": "node scripts/demo-voters.js",
+    "demo-clean": "powershell -Command \"Remove-Item -Recurse -Force C:\\temp\\tfg-voter-* -ErrorAction SilentlyContinue\""
   },
   "dependencies": {
     "argon2": "^0.44.0",
@@ -47,6 +49,7 @@
     "ws": "^8.20.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "playwright": "^1.59.1"
   }
 }

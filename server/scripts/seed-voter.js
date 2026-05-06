@@ -24,11 +24,11 @@ if (result.error) {
 
 async function createVoter() {
     await connectToDatabase(String(process.env.DATABASE_URI));
-    const hashedSecretCode = await hashSecretCode("123456");
+    const hashedSecretCode = await hashSecretCode("TFG_Pass_Segura6983985()·$=");
     const { publicKey, privateKey } = generateEd25519KeyPair();
 
     const voter = new VoterModel({
-        voterId: `${country}-12345678`,
+        voterId: `${country}-10`,
         secretCode: hashedSecretCode,
         identityPublicKey: publicKey,
         encryptionPublicKey: "",

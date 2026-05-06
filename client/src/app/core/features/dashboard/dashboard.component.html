@@ -70,9 +70,11 @@
                             <div class="country-grid" role="group" aria-label="Lista de países candidatos">
                                 <label class="country-card"
                                     *ngFor="let candidate of voting.candidates; trackBy: trackByCountry"
-                                    [class.country-card--selected]="selectedCountries.includes(candidate.countryCode)">
+                                    [class.country-card--selected]="selectedCountries.includes(candidate.countryCode)"
+                                    [attr.data-testid]="'candidate-card-' + candidate.countryCode">
                                     <input type="checkbox" class="country-card__input" [value]="candidate.countryCode"
                                         [checked]="selectedCountries.includes(candidate.countryCode)"
+                                        [attr.data-testid]="'candidate-checkbox-' + candidate.countryCode"
                                         [attr.aria-label]="'Seleccionar ' + candidate.countryName + ', actuación número ' + candidate.performanceOrder"
                                         (change)="onCountrySelectionChange(candidate.countryCode, $event)" />
 
@@ -121,7 +123,7 @@
                         </fieldset>
 
                         <button class="btn-primary" type="button" (click)="prepareVote()"
-                            [disabled]="selectedCountries.length === 0">
+                            data-testid="prepare-vote-button" [disabled]="selectedCountries.length === 0">
                             Preparar voto
                         </button>
                     </ng-container>
@@ -191,7 +193,8 @@
                                     Volver a editar
                                 </button>
 
-                                <button type="button" class="btn-primary" (click)="confirmVote()">
+                                <button type="button" class="btn-primary" (click)="confirmVote()"
+                                    data-testid="confirm-vote-button">
                                     Confirmar voto
                                 </button>
                             </div>
