@@ -10,6 +10,7 @@ import { exportPublicKeyToPem, exportPrivateKeyToPem } from "../utils/pem.util";
 export class VoterKeyService {
     private readonly signStorageKey = 'tfg_vote_sign_keypair';
     private readonly encryptStorageKey = 'tfg_vote_encrypt_keypair';
+    private readonly voterSignStorageKey = 'tfg_voter_sign_keypair';
 
     constructor(
         private webCryptoEd25519Service: WebCryptoEd25519Service,
@@ -41,6 +42,23 @@ export class VoterKeyService {
         const privateKey = await exportPrivateKeyToPem(keyPair.privateKey);
 
         this.saveVoterKeyPair(this.signStorageKey, { publicKey, privateKey });
+
+        return { publicKey, privateKey };
+    }
+
+
+    async ensureVoterSigningVoteKeyPair(): Promise<VoteKeyPair> {
+        const existingKeyPair = this.getVoterKeyPair(this.voterSignStorageKey);
+
+        if (existingKeyPair) {
+            return existingKeyPair;
+        }
+
+        const keyPair = await this.webCryptoEd25519Service.generateKeyPair();
+        const publicKey = await exportPublicKeyToPem(keyPair.publicKey);
+        const privateKey = await exportPrivateKeyToPem(keyPair.privateKey);
+
+        this.saveVoterKeyPair(this.voterSignStorageKey, { publicKey, privateKey });
 
         return { publicKey, privateKey };
     }

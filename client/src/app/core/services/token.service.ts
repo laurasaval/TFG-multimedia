@@ -49,17 +49,19 @@ export class TokenService {
             return voter.token[0];
         }
 
-        const signingVoteKeyPair = await this.voterKeyService.ensureSigningVoteKeyPair();
+        const voteSigningVoteKeyPair = await this.voterKeyService.ensureSigningVoteKeyPair();
+        const voterSigningVoteKeyPair = await this.voterKeyService.ensureVoterSigningVoteKeyPair();
         const encryptionVoteKeyPair = await this.voterKeyService.ensureEncryptionVoteKeyPair();
         const identityPrivateKey = this.identityKeyService.getIdentityPrivateKey();
 
-        if (!identityPrivateKey) {
-            throw new Error('No se ha encontrado la clave privada de identidad');
+        if (!identityPrivateKey || !voteSigningVoteKeyPair || !voterSigningVoteKeyPair || !identityPrivateKey) {
+            throw new Error('No se han encontrado las claves necesarias');
         }
 
         const payload: VoteTokenRequestPayload = {
             voterId: voter.voterId,
-            voterSigningPublicKey: signingVoteKeyPair.publicKey,
+            voteSigningPublicKey: voteSigningVoteKeyPair.publicKey,
+            voterSigningPublicKey: voterSigningVoteKeyPair.publicKey,
             voterEncryptionPublicKey: encryptionVoteKeyPair.publicKey,
             requestedAt: new Date().toISOString()
         };

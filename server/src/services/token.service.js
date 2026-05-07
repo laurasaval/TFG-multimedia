@@ -60,13 +60,15 @@ export async function requestToken({
 
     const {
         voterId,
+        voteSigningPublicKey,
         voterSigningPublicKey,
         voterEncryptionPublicKey,
         requestedAt,
         identitySignature
     } = decryptedEnvelope;
 
-    if (!voterId || !voterSigningPublicKey || !voterEncryptionPublicKey || !requestedAt || !identitySignature) {
+    if (!voterId || !voteSigningPublicKey || !voterSigningPublicKey ||
+        !voterEncryptionPublicKey || !requestedAt || !identitySignature) {
         return {
             ok: false,
             message: "No se ha proporcionado toda la información necesaria para generar el token"
@@ -91,6 +93,7 @@ export async function requestToken({
 
     const requestPayload = createTokenRequestPayload({
         voterId,
+        voteSigningPublicKey,
         voterSigningPublicKey,
         voterEncryptionPublicKey,
         requestedAt
@@ -157,7 +160,7 @@ export async function requestToken({
         voterEncryptionPublicKey
     );
 
-    await updateVoterAfterTokenCreation(voterId, encryptedToken, voterEncryptionPublicKey);
+    await updateVoterAfterTokenCreation(voterId, encryptedToken, voterEncryptionPublicKey, voteSigningPublicKey);
 
     return {
         ok: true,

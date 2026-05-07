@@ -1,11 +1,13 @@
 export function createTokenRequestPayload({
     voterId,
+    voteSigningPublicKey,
     voterSigningPublicKey,
     voterEncryptionPublicKey,
     requestedAt
 }) {
     return {
         voterId,
+        voteSigningPublicKey,
         voterSigningPublicKey,
         voterEncryptionPublicKey,
         requestedAt
