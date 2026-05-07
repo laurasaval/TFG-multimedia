@@ -17,16 +17,7 @@ import { P2PNetworkService } from '../../services/p2p-network.service';
 import { SessionService } from '../../services/session.service';
 import { Subscription } from 'rxjs';
 import { API_CONFIG } from '../../config/api.config';
-
-// TODO: mover e importar
-type VotingState = 'not-started' | 'open' | 'closed';
-type VoteStep = 'selection' | 'review' | 'p2p';
-
-interface SelectedPerformanceVideo {
-  countryCode: string;
-  countryName: string;
-  safeUrl: SafeResourceUrl;
-}
+import { VotingState, VoteStep, SelectedPerformanceVideo } from '../../../shared/models/dashboard.model';
 
 @Component({
   selector: 'app-dashboard',
