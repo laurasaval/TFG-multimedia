@@ -19,3 +19,14 @@ export async function updateVoterAfterTokenCreation(voterId, encryptedToken, vot
         }
     );
 }
+
+export async function getVoterVotingPublicKeysById(voterId) {
+    return await VoterModel.findOne(
+        { voterId },
+        {
+            encryptionPublicKey: 1,
+            voteSigningPublicKey: 1,
+            _id: 0
+        }
+    );
+}

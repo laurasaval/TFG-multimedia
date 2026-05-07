@@ -14,9 +14,10 @@ export interface SignalingMessage<T = any> {
     payload: T;
 }
 
-// TODO: Añadir claves publicas
 export interface P2PPeer {
     peerId: string;
+    encryptionPublicKey: string;
+    voteSigningPublicKey: string;
     joinedAt: string;
 }
 

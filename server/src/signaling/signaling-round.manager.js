@@ -1,6 +1,7 @@
 import { randomUUID, createHash } from "crypto";
 import { SIGNALING_TYPES, sendJson } from "./signaling-message-types.js";
 import { canonicalJson } from "../../../shared/utils/canonical-json.util.js";
+import { getVoterVotingPublicKeysById } from "../repositories/voter.repository.js";
 
 const ROUND_SIZE = Number(process.env.P2P_ROUND_SIZE || 2);
 
@@ -36,7 +37,7 @@ function hashBlock(block) {
         .digest("hex");
 }
 
-export function registerPeer({ ws, voterId }) {
+export async function registerPeer({ ws, voterId }) {
     if (livePeersById.has(voterId)) {
         sendJson(ws, {
             type: SIGNALING_TYPES.ERROR,
@@ -47,11 +48,13 @@ export function registerPeer({ ws, voterId }) {
         return;
     }
 
-    // TODO: Solicitar e incluir clave de cifrado del peer
+    const voterKeys = await getVoterVotingPublicKeysById(voterId);
 
     const peer = {
         peerId: randomUUID(),
         voterId,
+        encryptionPublicKey: voterKeys.encryptionPublicKey,
+        voteSigningPublicKey: voterKeys.voteSigningPublicKey,
         joinedAt: new Date().toISOString(),
         ws,
         roundId: null
@@ -204,6 +207,8 @@ function broadcastToRound(roundId, message) {
 function toPublicPeer(peer) {
     return {
         peerId: peer.peerId,
+        encryptionPublicKey: peer.encryptionPublicKey,
+        voteSigningPublicKey: peer.voteSigningPublicKey,
         joinedAt: peer.joinedAt
     };
 }
