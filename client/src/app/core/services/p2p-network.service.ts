@@ -14,6 +14,7 @@ export class P2PNetworkService {
     connectionEvents$ = new BehaviorSubject<any[]>([]);
     p2pMessages$ = new BehaviorSubject<any[]>([]);
     error$ = new BehaviorSubject<string | null>(null);
+    disconnectedPeers$ = new BehaviorSubject<string[]>([]);
 
     constructor(
         private signalingService: SignalingService,
@@ -28,6 +29,10 @@ export class P2PNetworkService {
 
                 case "ROUND_CREATED":
                     await this.handleRoundCreated(message.payload);
+                    break;
+
+                case "PEER_DISCONNECTED":
+                    this.handlePeerDisconnected(message.payload);
                     break;
 
                 case "ERROR":
@@ -100,5 +105,35 @@ export class P2PNetworkService {
                 error?.message ?? "No se pudo procesar la ronda P2P"
             );
         }
+    }
+
+    private handlePeerDisconnected(payload: any): void {
+        const peerId = payload?.peerId;
+
+        if (!peerId) {
+            return;
+        }
+
+        this.webRTCService.removePeer(peerId);
+
+        const currentDisconnected = this.disconnectedPeers$.value;
+
+        if (!currentDisconnected.includes(peerId)) {
+            this.disconnectedPeers$.next([...currentDisconnected, peerId]);
+        }
+
+        const currentRound = this.roundState$.value;
+
+        if (!currentRound) {
+            return;
+        }
+
+        const updatedRound = {
+            ...currentRound,
+            peers: currentRound.peers.filter((peer) => peer.peerId !== peerId),
+            previousRoundPeers: currentRound.previousRoundPeers
+        };
+
+        this.roundState$.next(updatedRound);
     }
 }

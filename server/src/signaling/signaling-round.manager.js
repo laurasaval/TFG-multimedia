@@ -95,7 +95,7 @@ export function unregisterPeerBySocket(ws) {
     }
 
     if (removedPeer.roundId) {
-        broadcastToRound(removedPeer.roundId, {
+        broadcastToRoundExcept(removedPeer.roundId, {
             type: SIGNALING_TYPES.PEER_DISCONNECTED,
             payload: {
                 peerId: removedPeer.peerId
@@ -199,6 +199,14 @@ export function relayToPeer({ fromPeerId, toPeerId, type, payload }) {
 function broadcastToRound(roundId, message) {
     for (const peer of livePeersById.values()) {
         if (peer.roundId === roundId) {
+            sendJson(peer.ws, message);
+        }
+    }
+}
+
+function broadcastToRoundExcept(roundId, excludedPeerId, message) {
+    for (const peer of livePeersById.values()) {
+        if (peer.roundId === roundId && peer.peerId !== excludedPeerId) {
             sendJson(peer.ws, message);
         }
     }

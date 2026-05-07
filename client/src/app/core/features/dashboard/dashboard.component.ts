@@ -52,6 +52,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   connectionEvents: any[] = [];
   p2pMessages: any[] = [];
   p2pError: string | null = null;
+  disconnectedPeers: string[] = [];
 
   private subscriptions: Subscription[] = [];
 
@@ -230,6 +231,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.waitingState = state;
     });
 
+    this.p2pNetworkService.disconnectedPeers$.subscribe((peers) => {
+      this.disconnectedPeers = peers;
+    });
+
     this.p2pNetworkService.roundState$.subscribe((state) => {
       this.roundState = state;
 
@@ -243,6 +248,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.p2pNetworkService.connectionEvents$.subscribe((events) => {
       this.connectionEvents = events;
+
+      const disconnectedStates = new Set([
+        'disconnected',
+        'failed',
+        'closed',
+        'peer-disconnected',
+        'datachannel-closed'
+      ]);
+
+      const disconnected = events
+        .filter((event) => disconnectedStates.has(event.state))
+        .map((event) => event.peerId)
+        .filter((peerId) => !!peerId);
+
+      this.disconnectedPeers = Array.from(new Set(disconnected));
 
       if (this.roundState) {
         this.buildP2PGraph();
@@ -344,7 +364,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const peers = this.roundState.peers;
+    const peers = this.roundState.peers.filter(
+      (peer) => !this.disconnectedPeers.includes(peer.peerId)
+    );
+
+    if (peers.length === 0) {
+      this.graphNodes = [];
+      this.graphEdges = [];
+      return;
+    }
+
     const ownPeerId = this.roundState.ownPeerId;
     const secretaryPeerId = this.roundState.roles.secretary.peerId;
     const presidentPeerId = this.roundState.roles.president.peerId

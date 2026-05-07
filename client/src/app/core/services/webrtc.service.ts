@@ -58,6 +58,27 @@ export class WebRTCService {
         }
     }
 
+    removePeer(peerId: string): void {
+        const channel = this.dataChannels.get(peerId);
+
+        if (channel) {
+            channel.close();
+            this.dataChannels.delete(peerId);
+        }
+
+        const connection = this.connections.get(peerId);
+
+        if (connection) {
+            connection.close();
+            this.connections.delete(peerId);
+        }
+
+        this.connectionState$.next({
+            peerId,
+            state: "peer-disconnected"
+        });
+    }
+
     private async ensureConnection(peerId: string): Promise<RTCPeerConnection> {
         const existing = this.connections.get(peerId);
 

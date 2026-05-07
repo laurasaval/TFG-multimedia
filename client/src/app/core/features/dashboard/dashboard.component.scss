@@ -2319,6 +2319,29 @@
     fill: var(--gold);
 }
 
+.p2p-disconnect-alert {
+    padding: 1rem;
+
+    border: 1px solid rgba(255, 79, 163, 0.35);
+    border-radius: var(--radius-md);
+
+    background: rgba(255, 79, 163, 0.08);
+    color: var(--text-soft);
+
+    strong {
+        color: var(--pink);
+    }
+
+    ul {
+        margin: 0.5rem 0 0;
+        padding-inline-start: 1.2rem;
+    }
+
+    li {
+        margin-block: 0.25rem;
+    }
+}
+
 @media (prefers-reduced-motion: no-preference) {
     .p2p-graph__node--self .p2p-graph__node-ring {
         animation: self-ring-pulse 2.2s ease-in-out infinite;

@@ -378,6 +378,16 @@
             </aside>
         </div>
 
+        <div *ngIf="disconnectedPeers.length > 0" class="p2p-disconnect-alert" role="status">
+            <strong>Nodos desconectados:</strong>
+
+            <ul>
+                <li *ngFor="let peerId of disconnectedPeers">
+                    {{ peerId }}
+                </li>
+            </ul>
+        </div>
+
         <div *ngIf="p2pMessages.length > 0" class="p2p-messages">
             <h3>Mensajes P2P recibidos</h3>
 
