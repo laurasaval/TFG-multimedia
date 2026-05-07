@@ -38,6 +38,7 @@
     "keys-encryption:fr": "node scripts/generate-country-encryption-keys.js fr",
     "keys-encryption:de": "node scripts/generate-country-encryption-keys.js de",
     "demo-voters": "node scripts/demo-voters.js",
+    "demo-voter": "node scripts/demo-voter.js",
     "demo-clean": "powershell -Command \"Remove-Item -Recurse -Force C:\\temp\\tfg-voter-* -ErrorAction SilentlyContinue\""
   },
   "dependencies": {
