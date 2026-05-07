@@ -2199,3 +2199,142 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
+
+/* ==========================================================================
+   P2P graph nodes — role + self layering
+   ========================================================================== */
+
+.p2p-graph__node-core {
+    fill: rgba(255, 250, 247, 0.1);
+    stroke: rgba(255, 250, 247, 0.42);
+    stroke-width: 2;
+
+    filter:
+        drop-shadow(0 0.4rem 0.75rem rgba(0, 0, 0, 0.35));
+}
+
+.p2p-graph__node-ring {
+    fill: transparent;
+    stroke: transparent;
+    stroke-width: 0;
+    opacity: 0;
+}
+
+/* Rol normal: votante */
+
+.p2p-graph__node--voter .p2p-graph__node-core {
+    fill: rgba(255, 250, 247, 0.1);
+    stroke: rgba(255, 250, 247, 0.42);
+}
+
+/* Rol: secretario */
+
+.p2p-graph__node--secretary .p2p-graph__node-core {
+    fill: rgba(143, 245, 220, 0.18);
+    stroke: var(--success);
+    stroke-width: 2.5;
+}
+
+/* Rol: jefe */
+
+.p2p-graph__node--president .p2p-graph__node-core {
+    fill: rgba(255, 240, 106, 0.18);
+    stroke: var(--gold);
+    stroke-width: 2.5;
+}
+
+/* Marca persistente de "YO" */
+
+.p2p-graph__node--self .p2p-graph__node-ring {
+    opacity: 1;
+
+    fill: transparent;
+    stroke: var(--cyan);
+    stroke-width: 4;
+    stroke-dasharray: 7 5;
+
+    filter:
+        drop-shadow(0 0 0.35rem rgba(94, 231, 255, 0.9)) drop-shadow(0 0 0.9rem rgba(94, 231, 255, 0.4));
+}
+
+/* Refuerzo del core si además soy yo */
+
+.p2p-graph__node--self .p2p-graph__node-core {
+    stroke-width: 3.25;
+
+    filter:
+        drop-shadow(0 0 0.45rem rgba(94, 231, 255, 0.55)) drop-shadow(0 0.55rem 0.85rem rgba(0, 0, 0, 0.38));
+}
+
+/* Combinaciones: yo + secretario */
+
+.p2p-graph__node--self.p2p-graph__node--secretary .p2p-graph__node-core {
+    fill: rgba(143, 245, 220, 0.26);
+    stroke: var(--success);
+}
+
+/* Combinaciones: yo + jefe */
+
+.p2p-graph__node--self.p2p-graph__node--president .p2p-graph__node-core {
+    fill: rgba(255, 240, 106, 0.28);
+    stroke: var(--gold);
+}
+
+/* Textos */
+
+.p2p-graph__node-code {
+    fill: var(--text);
+    font-size: 0.95rem;
+    font-weight: 950;
+    pointer-events: none;
+}
+
+.p2p-graph__node-role {
+    fill: var(--text-muted);
+    font-size: 0.62rem;
+    font-weight: 850;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+/* Texto reforzado para YO */
+
+.p2p-graph__node--self .p2p-graph__node-code {
+    fill: var(--cyan);
+}
+
+.p2p-graph__node--self .p2p-graph__node-role {
+    fill: var(--gold);
+}
+
+/* Texto si es secretario */
+
+.p2p-graph__node--secretary:not(.p2p-graph__node--self) .p2p-graph__node-role {
+    fill: var(--success);
+}
+
+/* Texto si es jefe */
+
+.p2p-graph__node--president:not(.p2p-graph__node--self) .p2p-graph__node-role {
+    fill: var(--gold);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .p2p-graph__node--self .p2p-graph__node-ring {
+        animation: self-ring-pulse 2.2s ease-in-out infinite;
+    }
+}
+
+@keyframes self-ring-pulse {
+
+    0%,
+    100% {
+        stroke-opacity: 0.85;
+        stroke-width: 4;
+    }
+
+    50% {
+        stroke-opacity: 1;
+        stroke-width: 5.5;
+    }
+}

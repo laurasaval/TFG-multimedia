@@ -343,11 +343,13 @@
                 <g *ngFor="let node of graphNodes" class="p2p-graph__node" [class.p2p-graph__node--self]="node.isSelf"
                     [class.p2p-graph__node--secretary]="node.role === 'secretary'"
                     [class.p2p-graph__node--president]="node.role === 'president'"
+                    [class.p2p-graph__node--voter]="node.role === 'voter'"
                     [attr.transform]="'translate(' + node.x + ',' + node.y + ')'">
 
-                    <circle r="34"></circle>
+                    <circle class="p2p-graph__node-ring" r="41"></circle>
+                    <circle class="p2p-graph__node-core" r="34"></circle>
 
-                    <text class="p2p-graph__node-role" text-anchor="middle" y="16">
+                    <text class="p2p-graph__node-role" text-anchor="middle" y="3">
                         {{ node.roleLabel }}
                     </text>
                 </g>

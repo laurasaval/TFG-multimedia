@@ -364,19 +364,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
       let role: 'self' | 'secretary' | 'president' | 'voter' = 'voter';
       let roleLabel = 'Votante';
 
-      if (isSelf) {
-        role = 'self';
-        roleLabel = 'Yo';
-      }
 
       if (isSecretary) {
         role = 'secretary';
-        roleLabel = 'Sec.';
+        roleLabel = 'Secretario';
       }
 
       if (isPresident) {
         role = 'president';
         roleLabel = 'Presidente';
+      }
+
+      if (isSelf) {
+        roleLabel = `Yo\n${roleLabel}`;
       }
 
       return {
