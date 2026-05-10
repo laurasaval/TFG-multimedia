@@ -39,7 +39,7 @@ async function cleanVoters() {
             $set: {
                 token: [],
                 encryptionPublicKey: "",
-                voteSigningPublicKey: ""
+                voterSigningPublicKey: ""
             }
         }
     );

@@ -60,14 +60,14 @@ export async function requestToken({
 
     const {
         voterId,
-        voteSigningPublicKey,
         voterSigningPublicKey,
+        tokenSigningPublicKey,
         voterEncryptionPublicKey,
         requestedAt,
         identitySignature
     } = decryptedEnvelope;
 
-    if (!voterId || !voteSigningPublicKey || !voterSigningPublicKey ||
+    if (!voterId || !voterSigningPublicKey || !tokenSigningPublicKey ||
         !voterEncryptionPublicKey || !requestedAt || !identitySignature) {
         return {
             ok: false,
@@ -93,8 +93,8 @@ export async function requestToken({
 
     const requestPayload = createTokenRequestPayload({
         voterId,
-        voteSigningPublicKey,
         voterSigningPublicKey,
+        tokenSigningPublicKey,
         voterEncryptionPublicKey,
         requestedAt
     });
@@ -123,7 +123,7 @@ export async function requestToken({
     const issuedTokenPayload = createIssuedTokenPayload({
         tokenId,
         token,
-        voterSigningPublicKey,
+        tokenSigningPublicKey,
         issuedAt,
         used
     });
@@ -149,7 +149,7 @@ export async function requestToken({
     const issuedToken = {
         tokenId,
         token,
-        voterSigningPublicKey,
+        tokenSigningPublicKey,
         issuedAt,
         used,
         anccSignature
@@ -160,7 +160,7 @@ export async function requestToken({
         voterEncryptionPublicKey
     );
 
-    await updateVoterAfterTokenCreation(voterId, encryptedToken, voterEncryptionPublicKey, voteSigningPublicKey);
+    await updateVoterAfterTokenCreation(voterId, encryptedToken, voterEncryptionPublicKey, voterSigningPublicKey);
 
     return {
         ok: true,

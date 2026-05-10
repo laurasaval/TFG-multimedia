@@ -2,8 +2,8 @@ import { EncryptedEnvelope } from "./encrypted.model";
 
 export interface VoteTokenRequestPayload {
     voterId: string;
-    voteSigningPublicKey: string;
     voterSigningPublicKey: string;
+    tokenSigningPublicKey: string;
     voterEncryptionPublicKey: string;
     requestedAt: string;
 }
@@ -15,7 +15,7 @@ export interface VoteTokenRequestBody extends VoteTokenRequestPayload {
 export interface VoteToken {
     tokenId: string;
     token: string;
-    voterSigningPublicKey: string;
+    tokenSigningPublicKey: string;
     issuedAt: string;
     used: boolean;
     anccSignature: string;

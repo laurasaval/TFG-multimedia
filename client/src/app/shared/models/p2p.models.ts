@@ -17,7 +17,7 @@ export interface SignalingMessage<T = any> {
 export interface P2PPeer {
     peerId: string;
     encryptionPublicKey: string;
-    voteSigningPublicKey: string;
+    voterSigningPublicKey: string;
     joinedAt: string;
 }
 

@@ -177,7 +177,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
 
       this.votePlain = this.voteService.prepareVotePlain(this.selectedCountries);
-      [this.encryptedVote, this.symmetricKey] = await this.voteService.encryptVote(this.votePlain);
+      //[this.encryptedVote, this.symmetricKey] = await this.voteService.encryptVote(this.votePlain);
 
       this.voteStep = 'p2p';
       this.successMessage = "Voto preparado correctamente. Conectando a la red P2P...";

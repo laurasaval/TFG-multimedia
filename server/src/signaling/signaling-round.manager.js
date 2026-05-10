@@ -54,7 +54,7 @@ export async function registerPeer({ ws, voterId }) {
         peerId: randomUUID(),
         voterId,
         encryptionPublicKey: voterKeys.encryptionPublicKey,
-        voteSigningPublicKey: voterKeys.voteSigningPublicKey,
+        voterSigningPublicKey: voterKeys.voterSigningPublicKey,
         joinedAt: new Date().toISOString(),
         ws,
         roundId: null
@@ -216,7 +216,7 @@ function toPublicPeer(peer) {
     return {
         peerId: peer.peerId,
         encryptionPublicKey: peer.encryptionPublicKey,
-        voteSigningPublicKey: peer.voteSigningPublicKey,
+        voterSigningPublicKey: peer.voterSigningPublicKey,
         joinedAt: peer.joinedAt
     };
 }

@@ -49,19 +49,19 @@ export class TokenService {
             return voter.token[0];
         }
 
-        const voteSigningVoteKeyPair = await this.voterKeyService.ensureSigningVoteKeyPair();
-        const voterSigningVoteKeyPair = await this.voterKeyService.ensureVoterSigningVoteKeyPair();
+        const voterSigningVoteKeyPair = await this.voterKeyService.ensureVoterSigningKeyPair();
+        const tokenSigningVoteKeyPair = await this.voterKeyService.ensureTokenSigningVoteKeyPair();
         const encryptionVoteKeyPair = await this.voterKeyService.ensureEncryptionVoteKeyPair();
         const identityPrivateKey = this.identityKeyService.getIdentityPrivateKey();
 
-        if (!identityPrivateKey || !voteSigningVoteKeyPair || !voterSigningVoteKeyPair || !identityPrivateKey) {
+        if (!identityPrivateKey || !voterSigningVoteKeyPair || !tokenSigningVoteKeyPair || !identityPrivateKey) {
             throw new Error('No se han encontrado las claves necesarias');
         }
 
         const payload: VoteTokenRequestPayload = {
             voterId: voter.voterId,
-            voteSigningPublicKey: voteSigningVoteKeyPair.publicKey,
             voterSigningPublicKey: voterSigningVoteKeyPair.publicKey,
+            tokenSigningPublicKey: tokenSigningVoteKeyPair.publicKey,
             voterEncryptionPublicKey: encryptionVoteKeyPair.publicKey,
             requestedAt: new Date().toISOString()
         };
@@ -120,7 +120,7 @@ export class TokenService {
         const signedPayload = {
             tokenId: token.tokenId,
             token: token.token,
-            voterSigningPublicKey: token.voterSigningPublicKey,
+            tokenSigningPublicKey: token.tokenSigningPublicKey,
             issuedAt: token.issuedAt,
             used: token.used
         };

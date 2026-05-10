@@ -8,9 +8,9 @@ import { exportPublicKeyToPem, exportPrivateKeyToPem } from "../utils/pem.util";
     providedIn: 'root'
 })
 export class VoterKeyService {
-    private readonly signStorageKey = 'tfg_vote_sign_keypair';
-    private readonly encryptStorageKey = 'tfg_vote_encrypt_keypair';
-    private readonly voterSignStorageKey = 'tfg_voter_sign_keypair';
+    private readonly voterSignStorageKey = 'tfg_votef_sign_keypair';
+    private readonly encryptStorageKey = 'tfg_voter_encrypt_keypair';
+    private readonly tokenSignStorageKey = 'tfg_token_sign_keypair';
 
     constructor(
         private webCryptoEd25519Service: WebCryptoEd25519Service,
@@ -30,24 +30,7 @@ export class VoterKeyService {
         localStorage.removeItem(storageKey);
     }
 
-    async ensureSigningVoteKeyPair(): Promise<VoteKeyPair> {
-        const existingKeyPair = this.getVoterKeyPair(this.signStorageKey);
-
-        if (existingKeyPair) {
-            return existingKeyPair;
-        }
-
-        const keyPair = await this.webCryptoEd25519Service.generateKeyPair();
-        const publicKey = await exportPublicKeyToPem(keyPair.publicKey);
-        const privateKey = await exportPrivateKeyToPem(keyPair.privateKey);
-
-        this.saveVoterKeyPair(this.signStorageKey, { publicKey, privateKey });
-
-        return { publicKey, privateKey };
-    }
-
-
-    async ensureVoterSigningVoteKeyPair(): Promise<VoteKeyPair> {
+    async ensureVoterSigningKeyPair(): Promise<VoteKeyPair> {
         const existingKeyPair = this.getVoterKeyPair(this.voterSignStorageKey);
 
         if (existingKeyPair) {
@@ -59,6 +42,23 @@ export class VoterKeyService {
         const privateKey = await exportPrivateKeyToPem(keyPair.privateKey);
 
         this.saveVoterKeyPair(this.voterSignStorageKey, { publicKey, privateKey });
+
+        return { publicKey, privateKey };
+    }
+
+
+    async ensureTokenSigningVoteKeyPair(): Promise<VoteKeyPair> {
+        const existingKeyPair = this.getVoterKeyPair(this.tokenSignStorageKey);
+
+        if (existingKeyPair) {
+            return existingKeyPair;
+        }
+
+        const keyPair = await this.webCryptoEd25519Service.generateKeyPair();
+        const publicKey = await exportPublicKeyToPem(keyPair.publicKey);
+        const privateKey = await exportPrivateKeyToPem(keyPair.privateKey);
+
+        this.saveVoterKeyPair(this.tokenSignStorageKey, { publicKey, privateKey });
 
         return { publicKey, privateKey };
     }

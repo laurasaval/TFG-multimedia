@@ -15,7 +15,7 @@ const voterSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    voteSigningPublicKey: {
+    voterSigningPublicKey: {
         type: String,
         required: false
     },
