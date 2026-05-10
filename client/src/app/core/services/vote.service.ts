@@ -18,7 +18,6 @@ export class VoteService {
 
         return {
             approved_countries: [...approved_countries].sort(),
-            vote_timestamp: new Date().toISOString(),
             vote_nonce: this.generateNonce()
         };
     }
