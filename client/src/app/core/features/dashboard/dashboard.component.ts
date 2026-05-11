@@ -32,7 +32,9 @@ import {
   NotaryInnerPayload,
   SecretaryInnerPayload,
   VoteToSecretaryMessage,
-  VoteToSecretaryPayload
+  VoteToSecretaryPayload,
+  SecretaryBatchToNotaryPayload,
+  SecretaryBatchToNotaryMessage
 } from '../../../shared/models/p2p-message.models';
 
 @Component({
@@ -72,6 +74,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   voteSentToSecretary = false;
+  secretaryBatchSentToNotary = false;
 
   graphNodes: Array<{
     peerId: string;
@@ -93,6 +96,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     fromPeerId: string;
     encryptedForNotary: EncryptedEnvelope;
   }> = [];
+
+  receivedSecretaryBatchAsNotary: SignedP2PPayload<SecretaryBatchToNotaryPayload> | null = null;
 
   constructor(
     private authService: AuthService,
@@ -234,6 +239,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return !!this.roundState && this.roundState.ownPeerId === this.roundState.roles.secretary.peerId;
   }
 
+  get isNotary(): boolean {
+    return !!this.roundState && this.roundState.ownPeerId === this.roundState.roles.notary.peerId;
+  }
+
   get selectedCandidates() {
     if (!this.voting?.candidates) {
       return [];
@@ -345,7 +354,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         voteToSecretaryPayload
       );
 
-      const message: P2PMessage<SignedP2PPayload<VoteToSecretaryPayload>> = {
+      const message: VoteToSecretaryMessage = {
         type: "VOTE_TO_SECRETARY",
         payload: signedVoteToSecretaryPayload
       }
@@ -362,6 +371,62 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     } catch (error: any) {
       this.errorMessage = error?.message ?? "No se puedo enviar el voto al secretario";
+    }
+  }
+
+  // El secreario prepara los votos para enviarselos al notario
+  private async sendSecretaryBatchToNotary(): Promise<void> {
+    try {
+      if (!this.roundState) {
+        throw new Error("No hay ronda P2P activa");
+      }
+
+      if (!this.isSecretary || this.secretaryBatchSentToNotary) { return; }
+
+      const expectedVotes = this.roundState.peers.length;
+
+      if (this.receivedVotesAsSecretary.length < expectedVotes) {
+        this.successMessage =
+          `Secretario: esperando votos ${this.receivedVotesAsSecretary.length}/${expectedVotes}`;
+        return;
+      }
+
+      const notary = this.roundState.roles.notary;
+
+      const encryptedForNotaryBatch = this.shuffleArray(
+        this.receivedVotesAsSecretary.map((item) => item.encryptedForNotary)
+      );
+
+      const payload: SecretaryBatchToNotaryPayload = {
+        roundId: this.roundState.roundId,
+        roundNumber: this.roundState.roundNumber,
+        secretaryPeerId: this.roundState.roles.secretary.peerId,
+        notaryPeerId: notary.peerId,
+        encryptedForNotaryBatch
+      };
+
+      const signedPayload = await this.p2pCryptoService.signWithVoterSigningKey(this.roundState.ownPeerId, payload);
+
+      const message: SecretaryBatchToNotaryMessage = {
+        type: "SECRETARY_BATCH_TO_NOTARY",
+        payload: signedPayload
+      };
+
+
+      if (this.isNotary) {
+        await this.handleSecretaryBatchToNotary(signedPayload);
+      } else {
+        this.p2pNetworkService.sendToPeer(notary.peerId, message);
+      }
+
+      this.secretaryBatchSentToNotary = true;
+
+      this.successMessage += this.isNotary
+        ? "\n Lote del secretario procesado localmente como notario"
+        : "\n Lote mezclado enviado al notario";
+    } catch (error: any) {
+      this.errorMessage =
+        error?.message ?? "No se pudo enviar el lote del secretario al notario";
     }
   }
 
@@ -412,6 +477,47 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ];
 
     this.successMessage = `Secretario: votos recibidos ${this.receivedVotesAsSecretary.length}/${this.roundState.peers.length}`;
+
+    if (this.receivedVotesAsSecretary.length >= this.roundState.peers.length) {
+      await this.sendSecretaryBatchToNotary();
+    }
+  }
+
+  // Funcion para cuando el notario recibe el paquete de votos
+  private async handleSecretaryBatchToNotary(
+    signedPayload: SignedP2PPayload<SecretaryBatchToNotaryPayload>
+  ): Promise<void> {
+    if (!this.roundState || !this.isNotary) { return; }
+
+    const payload = signedPayload.payload;
+
+    this.assertCurrentRound(payload.roundId, payload.roundNumber);
+
+    if (payload.notaryPeerId !== this.roundState.roles.notary.peerId) {
+      throw new Error("El lote no va dirigido al notario de esta ronda");
+    }
+
+    if (payload.secretaryPeerId !== this.roundState.roles.secretary.peerId) {
+      throw new Error("El lote no procede del secretario de esta ronda");
+    }
+
+    if (signedPayload.signerPeerId !== this.roundState.roles.secretary.peerId) {
+      throw new Error("El firmante no es el secretario de la ronda");
+    }
+
+    const signatureValid = await this.p2pCryptoService.verifySignedP2PPayload(
+      signedPayload,
+      this.roundState.roles.secretary.voterSigningPublicKey
+    );
+
+    if (!signatureValid) {
+      throw new Error("Firma inválida del secretario");
+    }
+
+    this.receivedSecretaryBatchAsNotary = signedPayload;
+
+    this.successMessage =
+      `Notario: lote recibido del secretario con ${payload.encryptedForNotaryBatch.length} votos cifrados`;
   }
 
   private toYoutubeEmbedUrl(url: string): string | null {
@@ -593,11 +699,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
             message.payload as SignedP2PPayload<VoteToSecretaryPayload>
           );
           break;
+        case "SECRETARY_BATCH_TO_NOTARY":
+          await this.handleSecretaryBatchToNotary(
+            message.payload as SignedP2PPayload<SecretaryBatchToNotaryPayload>
+          );
+          break;
       }
     } catch (error: any) {
       this.errorMessage =
         error?.message ?? "Error procesando mensaje P2P";
     }
+  }
+
+  private shuffleArray<T>(items: T[]): T[] {
+    const result = [...items];
+
+    for (let i = result.length - 1; i > 0; i--) {
+      const randomArray = new Uint32Array(1);
+      crypto.getRandomValues(randomArray);
+
+      const j = randomArray[0] % (i + 1);
+
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+
+    return result;
   }
 
   private buildP2PGraph(): void {

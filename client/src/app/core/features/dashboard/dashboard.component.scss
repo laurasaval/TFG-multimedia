@@ -250,6 +250,7 @@
 }
 
 .status-card--success {
+    white-space: pre-line;
     border: 1px solid var(--success-line);
     background: var(--success-bg);
     color: var(--success);
