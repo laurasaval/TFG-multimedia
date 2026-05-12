@@ -23,6 +23,7 @@ import { EncryptedEnvelope } from '../../../shared/models/encrypted.model';
 import { P2PCryptoService } from '../../services/p2p-crypto.service';
 import { HybridCryptoService } from '../../services/hybrid-crypto.service';
 import { VoterKeyService } from '../../services/voter-key.service';
+import { CountryKeyService } from '../../services/country-key.service';
 import {
   P2PMessage,
   SignedP2PPayload,
@@ -37,8 +38,14 @@ import {
   SecretaryBatchToNotaryMessage,
   NotaryBatchToPresidentPayload,
   NotaryHashCommitmentPayload,
-  NotaryBatchToPresidentMessage
+  NotaryBatchToPresidentMessage,
+  VotingResultBlock,
+  VotingResultBlockPayload,
+  ProposedBlockMessage,
+  ProposedBlockPayload
 } from '../../../shared/models/p2p-message.models';
+import { VoteToken } from '../../../shared/models/token.models';
+import { canonicalJson } from '../../utils/canonical-json.util';
 
 @Component({
   selector: 'app-dashboard',
@@ -79,7 +86,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   voteSentToSecretary = false;
   secretaryBatchSentToNotary = false;
   notaryBatchSentToPresident = false;
-
+  presidentBlockPublished = false;
 
   graphNodes: Array<{
     peerId: string;
@@ -107,6 +114,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   receivedBatchAsPresident: SignedP2PPayload<NotaryBatchToPresidentPayload> | null = null;
 
+  blockchain: VotingResultBlock[] = [];
+  finalResults: Record<string, number> | null = null;
+  voterId: string = "";
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -117,7 +128,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private p2pNetworkService: P2PNetworkService,
     private p2pCryptoService: P2PCryptoService,
     private hybridCryptoService: HybridCryptoService,
-    private voterKeyService: VoterKeyService
+    private voterKeyService: VoterKeyService,
+    private countryKeyService: CountryKeyService
   ) { }
 
   async ngOnInit() {
@@ -263,6 +275,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.voting.candidates.filter(candidate =>
       this.selectedCountries.includes(candidate.countryCode)
     );
+  }
+
+  get finalResultsList(): Array<{ country: string; points: number }> {
+    if (!this.finalResults) {
+      return [];
+    }
+
+    return Object.entries(this.finalResults)
+      .map(([country, points]) => ({ country, points }))
+      .sort((a, b) => b.points - a.points);
   }
 
   trackByCountry(_index: number, candidate: { countryCode: string }): string {
@@ -677,6 +699,134 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.successMessage +=
       `\n Presidente: lote recibido del notario con ${payload.encryptedForPresidentBatch.length} votos cifrados`;
+
+    await this.processPresidentBatchAndPublishBlock();
+  }
+
+  // Todos reciben propuesta de bloque
+  private async handleProposedBlock(block: VotingResultBlock): Promise<void> {
+    const alreadyExists = this.blockchain.some(
+      (existingBlock) => existingBlock.hash === block.hash
+    );
+
+    if (alreadyExists) {
+      return;
+    }
+
+    const blockValid = await this.verifyReceivedBlock(block);
+
+    if (!blockValid) {
+      throw new Error("El bloque recibido no es válido");
+    }
+
+    this.blockchain = [...this.blockchain, block];
+
+    if (block.payload.status === "VALID" && block.payload.tally) {
+      this.finalResults = block.payload.tally;
+      this.successMessage = "Resultados finales recibidos y verificados";
+    }
+
+    if (block.payload.status === "ABORTED") {
+      this.errorMessage = `Ronda anulada: ${block.payload.reason}`;
+    }
+  }
+
+  // Presidente procesa los votos recibidos y crea una propuesta de bloque
+  private async processPresidentBatchAndPublishBlock(): Promise<void> {
+    try {
+      if (!this.roundState) { throw new Error("No hay ronda P2P activa"); }
+
+      if (!this.isPresident || this.presidentBlockPublished) { return; }
+
+      if (!this.receivedBatchAsPresident) {
+        throw new Error("El presidente no ha recibido lote del notario");
+      }
+
+      const payload = this.receivedBatchAsPresident.payload;
+      const ownEncryptionKeyPair = await this.voterKeyService.ensureEncryptionVoteKeyPair();
+      const decryptedPackages: PresidentInnerPayload[] = [];
+
+      for (const encryptedForPresident of payload.encryptedForPresidentBatch) {
+        const presidentInnerPayload =
+          await this.decryptEnvelope<PresidentInnerPayload>(
+            encryptedForPresident,
+            ownEncryptionKeyPair.privateKey
+          );
+
+        this.assertCurrentRound(
+          presidentInnerPayload.roundId,
+          presidentInnerPayload.roundNumber
+        );
+
+        decryptedPackages.push(presidentInnerPayload);
+      }
+
+      const votes = decryptedPackages.map((item) => item.votePlain);
+      const tokenRoundProofs = decryptedPackages.map((item) => item.tokenRoundProof);
+
+      const hashesOk = await this.verifyVotesAgainstNotaryHashes(
+        votes,
+        payload.notaryHashCommitment.payload.votePlainHashes
+      );
+
+      if (!hashesOk) {
+        const abortedBlock = await this.createAbortedBlock(
+          "HASH_COMMITMENT_MISMATCH",
+          []
+        );
+
+        await this.publishBlock(abortedBlock);
+        return;
+      }
+
+      const tokenValidation = await this.validateTokenRoundProofs(tokenRoundProofs);
+
+      if (!tokenValidation.ok) {
+        console.error("Tokens inválidos detectados:", tokenValidation.invalidTokens);
+        const firstReason = tokenValidation.invalidTokens[0]?.reason ?? "INVALID_TOKEN";
+
+        const abortedBlock = await this.createAbortedBlock(
+          firstReason,
+          tokenValidation.invalidTokens
+        );
+
+        await this.publishBlock(abortedBlock);
+        return;
+      }
+
+      const tally = this.calculateTally(votes);
+
+      const validBlock = await this.createValidBlock({
+        votes: this.shuffleArray(votes),
+        tokenRoundProofs: this.shuffleArray(tokenRoundProofs),
+        tally
+      });
+
+      await this.publishBlock(validBlock);
+    } catch (error: any) {
+      this.errorMessage =
+        error?.message ?? "No se pudo procesar el lote del presidente";
+    }
+  }
+
+  private async publishBlock(block: VotingResultBlock): Promise<void> {
+    await this.handleProposedBlock(block);
+
+    const message: P2PMessage<ProposedBlockPayload> = {
+      type: "PROPOSED_BLOCK",
+      payload: {
+        block
+      }
+    };
+
+    this.p2pNetworkService.broadcast(message);
+
+    this.successMessage +=
+      block.payload.status === "VALID"
+        ? "\n Presidente: bloque válido publicado con resultados finales"
+        : "\n Presidente: ronda anulada por inconsistencias";
+
+    this.presidentBlockPublished = true;
   }
 
   private toYoutubeEmbedUrl(url: string): string | null {
@@ -719,6 +869,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.joiningP2P = true;
+    this.voterId = voter.voterId;
 
     const wsUrl = this.getSignalingUrl();
 
@@ -868,6 +1019,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
             message.payload as SignedP2PPayload<NotaryBatchToPresidentPayload>
           );
           break;
+        case "PROPOSED_BLOCK":
+          await this.handleProposedBlock(
+            (message.payload as ProposedBlockPayload).block
+          );
+          break;
       }
     } catch (error: any) {
       this.errorMessage =
@@ -888,6 +1044,339 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     return result;
+  }
+
+  private async verifyVotesAgainstNotaryHashes(votes: VotePlain[], votePlainHashes: string[]): Promise<boolean> {
+    if (votes.length !== votePlainHashes.length) {
+      return false;
+    }
+
+    const remainingHashes = [...votePlainHashes];
+
+    for (const vote of votes) {
+      const hash = await this.p2pCryptoService.hashCanonical(vote);
+
+      const index = remainingHashes.indexOf(hash);
+
+      if (index < 0) { return false; }
+
+      remainingHashes.splice(index, 1);
+    }
+
+    return remainingHashes.length === 0;
+  }
+
+  private async validateTokenRoundProofs(tokenRoundProofs: TokenRoundProof[]): Promise<{ ok: boolean; invalidTokens: any[]; }> {
+    const invalidTokens: any[] = [];
+    const seenTokenIds = new Set<string>();
+
+    for (const tokenRoundProof of tokenRoundProofs) {
+      const payload = tokenRoundProof.payload;
+      const token = payload.token;
+
+      if (!payload || !token) {
+        invalidTokens.push({
+          tokenRoundProof,
+          reason: "INVALID_TOKEN",
+          details: "Falta payload o token"
+        });
+      }
+
+      if (
+        payload.roundId !== this.roundState?.roundId ||
+        payload.roundNumber !== this.roundState?.roundNumber
+      ) {
+        invalidTokens.push({
+          tokenRoundProof,
+          reason: "INVALID_TOKEN_ROUND_SIGNATURE",
+          details: "La prueba de token pertenece a otra ronda"
+        });
+      }
+
+      if (!token.tokenId) {
+        invalidTokens.push({
+          tokenRoundProof,
+          reason: "INVALID_TOKEN",
+          details: "El token no contiene tokenId"
+        });
+      }
+
+      // TODO: debe tener en cuenta los tokens de toda la blockchain
+      if (seenTokenIds.has(token.tokenId)) {
+        invalidTokens.push({
+          tokenRoundProof,
+          reason: "DUPLICATED_TOKEN",
+          details: "Token duplicado dentro de la ronda"
+        });
+      }
+
+      seenTokenIds.add(token.tokenId);
+
+      const anccSignatureValid = await this.verifyANCCSignature(token);
+
+      if (!anccSignatureValid) {
+        invalidTokens.push({
+          tokenRoundProof,
+          reason: "INVALID_TOKEN",
+          details: "Firma ANCC inválida"
+        });
+      }
+
+      if (!token.tokenSigningPublicKey) {
+        invalidTokens.push({
+          tokenRoundProof,
+          reason: "INVALID_TOKEN",
+          details: "El token no contiene clave pública de firma del votante"
+        });
+      }
+
+      const tokenRoundSignatureValid = await this.p2pCryptoService.verifyWithPublicKey(
+        payload,
+        tokenRoundProof.signatureBase64,
+        token.tokenSigningPublicKey
+      );
+
+      if (!tokenRoundSignatureValid) {
+        invalidTokens.push({
+          tokenRoundProof,
+          reason: "INVALID_TOKEN_ROUND_SIGNATURE",
+          details: "Firma token + roundId + roundNumber inválida"
+        });
+      }
+    }
+
+    return {
+      ok: invalidTokens.length === 0,
+      invalidTokens
+    };
+  }
+
+  private async verifyANCCSignature(token: any): Promise<boolean> {
+    if (!token.anccSignature) {
+      return false;
+    }
+
+    const countryCode = this.voterId?.split("-")[0];
+    const countrySigningPublicKey = this.countryKeyService.getCountrySigningPublicKey(countryCode);
+    const signedPayload = this.getTokenSignedPayload(token);
+
+    return this.p2pCryptoService.verifyWithPublicKey(signedPayload, token.anccSignature, countrySigningPublicKey);
+  }
+
+  private async verifyReceivedBlock(block: VotingResultBlock): Promise<boolean> {
+    if (!this.roundState) {
+      return false;
+    }
+
+    const calculatedHash = await this.p2pCryptoService.hashCanonical(
+      block.payload
+    );
+
+    if (calculatedHash !== block.hash) {
+      return false;
+    }
+
+    if (block.presidentPeerId !== block.payload.roles.presidentPeerId) {
+      return false;
+    }
+
+    const presidentSignatureValid = await this.p2pCryptoService.verifyWithPublicKey(
+      {
+        payload: block.payload,
+        hash: block.hash
+      },
+      block.presidentSignatureBase64,
+      block.payload.roles.presidentVotePublicKey
+    );
+
+    if (!presidentSignatureValid) {
+      return false;
+    }
+
+    if (block.payload.notaryHashCommitment) {
+      const commitment = block.payload.notaryHashCommitment;
+
+      const notarySignatureValid =
+        await this.p2pCryptoService.verifySignedP2PPayload(
+          commitment,
+          block.payload.roles.notaryVotePublicKey
+        );
+
+      if (!notarySignatureValid) {
+        return false;
+      }
+    }
+
+    if (block.payload.status === "VALID") {
+      const votes = block.payload.votes;
+      const tokenRoundProofs = block.payload.tokenRoundProofs;
+      const tally = block.payload.tally;
+      const hashes = block.payload.notaryHashCommitment?.payload.votePlainHashes;
+
+      if (!votes || !tokenRoundProofs || !tally || !hashes) {
+        return false;
+      }
+
+      if (votes.length !== tokenRoundProofs.length) {
+        return false;
+      }
+
+      const hashesOk = await this.verifyVotesAgainstNotaryHashes(votes, hashes);
+
+      if (!hashesOk) {
+        return false;
+      }
+
+      const tokenValidation = await this.validateTokenRoundProofs(tokenRoundProofs);
+
+      if (!tokenValidation.ok) {
+        return false;
+      }
+
+      const recalculatedTally = this.calculateTally(votes);
+
+      if (canonicalJson(recalculatedTally) !== canonicalJson(tally)) {
+        return false;
+      }
+    }
+
+    if (block.payload.status === "ABORTED") {
+      if (block.payload.votes && block.payload.votes.length > 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private calculateTally(votes: VotePlain[]): Record<string, number> {
+    const tally: Record<string, number> = {};
+
+    for (const vote of votes) {
+      const countries = vote.approved_countries ?? [];
+
+      for (const countryCode of countries) {
+        tally[countryCode] = (tally[countryCode] ?? 0) + 1;
+      }
+    }
+
+    return tally;
+  }
+
+  private getTokenSignedPayload(token: any): any {
+    const {
+      anccSignature,
+      ...payload
+    } = token;
+
+    return payload;
+  }
+
+  private async createValidBlock(params: {
+    votes: VotePlain[];
+    tokenRoundProofs: TokenRoundProof[];
+    tally: Record<string, number>;
+  }): Promise<VotingResultBlock> {
+    if (!this.roundState || !this.receivedBatchAsPresident) {
+      throw new Error("No hay datos suficientes para crear bloque válido");
+    }
+
+    const payload: VotingResultBlockPayload = {
+      index: this.blockchain.length,
+      previousHash: this.getPreviousBlockHash(),
+      roundId: this.roundState.roundId,
+      roundNumber: this.roundState.roundNumber,
+      status: "VALID",
+      roles: this.getRolesSnapshot(),
+      notaryHashCommitment: this.receivedBatchAsPresident.payload.notaryHashCommitment,
+      votes: params.votes,
+      tokenRoundProofs: params.tokenRoundProofs,
+      tally: params.tally,
+      createdAt: new Date().toISOString()
+    };
+
+    return this.signBlockPayload(payload);
+  }
+
+  private async createAbortedBlock(
+    reason: any,
+    invalidTokens: any[]
+  ): Promise<VotingResultBlock> {
+    if (!this.roundState || !this.receivedBatchAsPresident) {
+      throw new Error("No hay estado suficiente para crear bloque abortado");
+    }
+
+    const payload: VotingResultBlockPayload = {
+      index: this.blockchain.length,
+      previousHash: this.getPreviousBlockHash(),
+
+      roundId: this.roundState.roundId,
+      roundNumber: this.roundState.roundNumber,
+
+      status: "ABORTED",
+      reason,
+
+      roles: this.getRolesSnapshot(),
+
+      notaryHashCommitment:
+        this.receivedBatchAsPresident.payload.notaryHashCommitment,
+
+      invalidTokens,
+
+      createdAt: new Date().toISOString()
+    };
+
+    return this.signBlockPayload(payload);
+  }
+
+  private async signBlockPayload(
+    payload: VotingResultBlockPayload
+  ): Promise<VotingResultBlock> {
+    if (!this.roundState) {
+      throw new Error("No hay ronda activa");
+    }
+
+    const hash = await this.p2pCryptoService.hashCanonical(payload);
+
+    const signedBlock = await this.p2pCryptoService.signWithVoterSigningKey(
+      this.roundState.ownPeerId,
+      {
+        payload,
+        hash
+      }
+    );
+
+    return {
+      payload,
+      hash,
+      presidentPeerId: this.roundState.ownPeerId,
+      presidentSignatureBase64: signedBlock.signatureBase64
+    };
+  }
+
+  private getPreviousBlockHash(): string {
+    if (this.blockchain.length === 0) {
+      return "GENESIS";
+    }
+
+    return this.blockchain[this.blockchain.length - 1].hash;
+  }
+
+  private getRolesSnapshot() {
+    if (!this.roundState) {
+      throw new Error("No hay ronda activa");
+    }
+
+    return {
+      secretaryPeerId: this.roundState.roles.secretary.peerId,
+      secretaryVotePublicKey: this.roundState.roles.secretary.voterSigningPublicKey,
+
+      notaryPeerId: this.roundState.roles.notary.peerId,
+      notaryVotePublicKey: this.roundState.roles.notary.voterSigningPublicKey,
+
+      presidentPeerId: this.roundState.roles.president.peerId,
+      presidentVotePublicKey: this.roundState.roles.president.voterSigningPublicKey
+    };
   }
 
   private buildP2PGraph(): void {

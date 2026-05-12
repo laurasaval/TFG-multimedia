@@ -409,6 +409,28 @@
         </div>
     </section>
 
+    <!-- Resultados -->
+    <section *ngIf="finalResults" class="p2p-round-card">
+        <div class="p2p-header">
+            <p class="p2p-eyebrow">Resultados finales</p>
+            <h2 class="p2p-title">Votos emitidos por España</h2>
+        </div>
+
+        <ol class="review-list">
+            <li class="review-item" *ngFor="let result of finalResultsList">
+                <div class="review-item__content">
+                    <p class="review-item__country">
+                        {{ result.country }}
+                    </p>
+                </div>
+
+                <span class="review-item__order">
+                    {{ result.points }}
+                </span>
+            </li>
+        </ol>
+    </section>
+
     <!-- Modal videoclip -->
     <div *ngIf="selectedPerformance" class="video-modal" role="dialog" aria-modal="true"
         aria-labelledby="video-modal-title" aria-describedby="video-modal-description"
