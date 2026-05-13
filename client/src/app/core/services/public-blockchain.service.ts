@@ -47,4 +47,15 @@ export class PublicBlockchainService {
 
         return data.blocks ?? [];
     }
+
+    async getBlocksFromBaseUrl(baseUrl: string): Promise<VotingResultBlock[]> {
+        const response = await fetch(`${baseUrl}/blocks`);
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+            throw new Error(data.message ?? "No se pudieron consultar los bloques");
+        }
+
+        return data.blocks ?? [];
+    }
 }

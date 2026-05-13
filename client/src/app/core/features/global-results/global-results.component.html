@@ -1,0 +1,102 @@
+<section class="global-results-page">
+    <header class="page-header">
+        <h1>Clasificación global</h1>
+
+        <button type="button" (click)="loadGlobalResults()">
+            Recargar clasificación
+        </button>
+    </header>
+
+    <div *ngIf="loading" class="status-card">
+        Calculando clasificación global...
+    </div>
+
+    <div *ngIf="errorMessage" class="status-card status-card--error">
+        {{ errorMessage }}
+    </div>
+
+    <div *ngIf="successMessage" class="status-card status-card--success">
+        {{ successMessage }}
+    </div>
+
+    <section class="panel" *ngIf="globalPointsList.length > 0">
+        <h2>Resultado final global</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Posición</th>
+                    <th>País</th>
+                    <th>Puntos</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr *ngFor="let item of globalPointsList; let i = index">
+                    <td>{{ i + 1 }}</td>
+                    <td>{{ item.country }}</td>
+                    <td>{{ item.points }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="panel">
+        <h2>Estado de verificación por país</h2>
+
+        <div class="country-grid">
+            <article *ngFor="let result of countryResults" class="country-card" [class.country-card--ok]="result.ok"
+                [class.country-card--error]="!result.ok">
+
+                <h3>{{ result.countryName }} ({{ result.countryCode }})</h3>
+
+                <p *ngIf="result.ok">
+                    Blockchain verificada: {{ result.verifiedBlocks.length }} bloque(s).
+                </p>
+
+                <p *ngIf="!result.ok">
+                    Error: {{ result.error }}
+                </p>
+
+                <button type="button" [disabled]="!result.ok" (click)="openCountryResults(result)">
+                    Ver blockchain completa
+                </button>
+            </article>
+        </div>
+    </section>
+
+    <section class="panel" *ngIf="verifiedCountryResults.length > 0">
+        <h2>Puntos otorgados por cada país</h2>
+
+        <article *ngFor="let result of verifiedCountryResults" class="country-points-card">
+
+            <h3>{{ result.countryName }} otorga</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>País</th>
+                        <th>Puntos</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr *ngFor="let item of getCountryAwardedPointsList(result)">
+                        <td>{{ item.country }}</td>
+                        <td>{{ item.points }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <details>
+                <summary>Ver conteo bruto nacional</summary>
+
+                <ul>
+                    <li *ngFor="let item of getCountryTallyList(result)">
+                        {{ item.country }}: {{ item.count }} voto(s)
+                    </li>
+                </ul>
+            </details>
+        </article>
+    </section>
+</section>

@@ -1,0 +1,64 @@
+.global-results-page {
+    max-width: 1150px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.status-card,
+.panel,
+.country-card,
+.country-points-card {
+    padding: 1rem;
+    border-radius: 1rem;
+    margin: 1rem 0;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.055);
+}
+
+.status-card--success {
+    border-color: rgba(46, 204, 113, 0.45);
+}
+
+.status-card--error {
+    border-color: rgba(231, 76, 60, 0.45);
+}
+
+.country-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1rem;
+}
+
+.country-card--ok {
+    border-color: rgba(46, 204, 113, 0.35);
+}
+
+.country-card--error {
+    border-color: rgba(231, 76, 60, 0.35);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+th,
+td {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    text-align: left;
+}
+
+button {
+    margin-top: 0.75rem;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

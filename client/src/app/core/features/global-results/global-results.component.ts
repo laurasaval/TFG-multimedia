@@ -1,136 +1,197 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
-import { PublicBlockchainService } from "../../services/public-blockchain.service";
-import { P2PCryptoService } from "../../services/p2p-crypto.service";
-import {
-  BlockApproval,
-  TokenRoundProof,
-  VotingResultBlock
-} from "../../../shared/models/p2p-message.models";
-import { VotePlain } from "../../../shared/models/vote.model";
-import { canonicalJson } from "../../utils/canonical-json.util";
-import { ActivatedRoute } from "@angular/router";
 import { Router } from "@angular/router";
 
+import { PublicBlockchainService } from "../../services/public-blockchain.service";
+import { P2PCryptoService } from "../../services/p2p-crypto.service";
+
+import {
+  ANCC_MIRRORS,
+  AnccMirrorConfig
+} from "../../config/ancc-mirrors.config";
+
+import {
+  VotingResultBlock
+} from "../../../shared/models/p2p-message.models";
+
+import { VotePlain } from "../../../shared/models/vote.model";
+import { canonicalJson } from "../../utils/canonical-json.util";
+
+interface CountryBlockchainResult {
+  countryCode: string;
+  countryName: string;
+  baseUrl: string;
+
+  loading: boolean;
+  ok: boolean;
+  error?: string;
+
+  rawBlocks: VotingResultBlock[];
+  verifiedBlocks: VotingResultBlock[];
+
+  accumulatedTally: Record<string, number>;
+  awardedPoints: Record<string, number>;
+}
+
 @Component({
-  selector: "app-results",
+  selector: "app-global-results",
   standalone: true,
   imports: [CommonModule],
-  templateUrl: "./results.component.html",
-  styleUrl: "./results.component.scss"
+  templateUrl: "./global-results.component.html",
+  styleUrl: "./global-results.component.scss"
 })
-export class ResultsComponent implements OnInit {
+export class GlobalResultsComponent implements OnInit {
   loading = false;
   errorMessage = "";
   successMessage = "";
 
-  blocks: VotingResultBlock[] = [];
-  verifiedBlocks: VotingResultBlock[] = [];
+  countryResults: CountryBlockchainResult[] = [];
+  globalPoints: Record<string, number> = {};
 
-  accumulatedTally: Record<string, number> = {};
-  finalPoints: Record<string, number> = {};
-
-  localReceipt: any | null = null;
+  readonly mirrors = ANCC_MIRRORS;
 
   constructor(
     private publicBlockchainService: PublicBlockchainService,
     private p2pCryptoService: P2PCryptoService,
-    private route: ActivatedRoute,
     private router: Router
   ) { }
 
   async ngOnInit(): Promise<void> {
-    await this.loadResults();
+    await this.loadGlobalResults();
   }
 
-  async loadResults(): Promise<void> {
+  async loadGlobalResults(): Promise<void> {
+    this.loading = true;
+    this.errorMessage = "";
+    this.successMessage = "";
+    this.globalPoints = {};
+
+    const results: CountryBlockchainResult[] = [];
+
+    for (const mirror of this.mirrors) {
+      const result = await this.loadCountryResult(mirror);
+      results.push(result);
+    }
+
+    this.countryResults = results;
+    this.globalPoints = this.calculateGlobalPoints(results);
+
+    const verifiedCount = results.filter((item) => item.ok).length;
+
+    this.successMessage =
+      `Clasificación global calculada con ${verifiedCount}/${results.length} blockchain(s) verificadas.`;
+
+    this.loading = false;
+  }
+
+  private async loadCountryResult(
+    mirror: AnccMirrorConfig
+  ): Promise<CountryBlockchainResult> {
+    const baseResult: CountryBlockchainResult = {
+      countryCode: mirror.countryCode,
+      countryName: mirror.countryName,
+      baseUrl: mirror.baseUrl,
+
+      loading: false,
+      ok: false,
+
+      rawBlocks: [],
+      verifiedBlocks: [],
+
+      accumulatedTally: {},
+      awardedPoints: {}
+    };
+
     try {
-      this.loading = true;
-      this.errorMessage = "";
-      this.successMessage = "";
+      const rawBlocks =
+        await this.publicBlockchainService.getBlocksFromBaseUrl(mirror.baseUrl);
 
-      this.localReceipt = this.loadLocalVoteReceipt();
+      const verifiedBlocks = await this.verifyBlockchain(rawBlocks);
 
-      const baseUrl = this.route.snapshot.queryParamMap.get("baseUrl");
+      const accumulatedTally =
+        this.calculateAccumulatedVoteCountsFromBlockchain(verifiedBlocks);
 
-      this.blocks = baseUrl
-        ? await this.publicBlockchainService.getBlocksFromBaseUrl(baseUrl)
-        : await this.publicBlockchainService.getBlocks();
+      const awardedPoints =
+        this.calculateEurovisionPoints(accumulatedTally);
 
-      this.verifiedBlocks = await this.verifyBlockchain(this.blocks);
-
-      this.accumulatedTally =
-        this.calculateAccumulatedVoteCountsFromBlockchain(this.verifiedBlocks);
-
-      this.finalPoints =
-        this.calculateFinalEurovisionPoints(this.accumulatedTally);
-
-      this.successMessage =
-        `Blockchain verificada correctamente: ${this.verifiedBlocks.length} bloque(s).`;
+      return {
+        ...baseResult,
+        ok: true,
+        rawBlocks,
+        verifiedBlocks,
+        accumulatedTally,
+        awardedPoints
+      };
     } catch (error: any) {
-      this.errorMessage =
-        error?.message ?? "No se pudieron cargar los resultados";
-    } finally {
-      this.loading = false;
+      return {
+        ...baseResult,
+        ok: false,
+        error: error?.message ?? "No se pudo verificar la blockchain nacional"
+      };
     }
   }
 
-  expandedBlockHashes = new Set<string>();
+  private calculateGlobalPoints(
+    countryResults: CountryBlockchainResult[]
+  ): Record<string, number> {
+    const global: Record<string, number> = {};
 
-  toggleBlockDetails(blockHash: string): void {
-    if (this.expandedBlockHashes.has(blockHash)) {
-      this.expandedBlockHashes.delete(blockHash);
-    } else {
-      this.expandedBlockHashes.add(blockHash);
-    }
-  }
+    for (const result of countryResults) {
+      if (!result.ok) {
+        continue;
+      }
 
-  isBlockExpanded(blockHash: string): boolean {
-    return this.expandedBlockHashes.has(blockHash);
-  }
-
-  goToGlobalResults(): void {
-    this.router.navigate(["/global-results"]);
-  }
-
-  private loadLocalVoteReceipt(): any | null {
-    const raw = localStorage.getItem("tfg_vote_receipt");
-
-    if (!raw) {
-      return null;
+      for (const [countryCode, points] of Object.entries(result.awardedPoints)) {
+        global[countryCode] = (global[countryCode] ?? 0) + points;
+      }
     }
 
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
+    return global;
   }
 
-  isLocalReceiptBlock(block: VotingResultBlock): boolean {
-    return this.localReceipt?.acceptedBlockHash === block.hash;
+  get globalPointsList(): Array<{ country: string; points: number }> {
+    return Object.entries(this.globalPoints)
+      .map(([country, points]) => ({ country, points }))
+      .sort((a, b) => {
+        if (b.points !== a.points) {
+          return b.points - a.points;
+        }
+
+        return a.country.localeCompare(b.country);
+      });
   }
 
-  get verifiedBlocksList(): VotingResultBlock[] {
-    return this.verifiedBlocks;
+  get verifiedCountryResults(): CountryBlockchainResult[] {
+    return this.countryResults.filter((item) => item.ok);
   }
 
-  get accumulatedTallyList(): Array<{ country: string; count: number }> {
-    return Object.entries(this.accumulatedTally)
-      .map(([country, count]) => ({ country, count }))
-      .sort((a, b) => b.count - a.count);
+  get failedCountryResults(): CountryBlockchainResult[] {
+    return this.countryResults.filter((item) => !item.ok);
   }
 
-  get finalPointsList(): Array<{ country: string; points: number }> {
-    return Object.entries(this.finalPoints)
+  getCountryAwardedPointsList(
+    result: CountryBlockchainResult
+  ): Array<{ country: string; points: number }> {
+    return Object.entries(result.awardedPoints)
       .map(([country, points]) => ({ country, points }))
       .sort((a, b) => b.points - a.points);
   }
 
-  getBlockTallyList(block: VotingResultBlock): Array<{ country: string; count: number }> {
-    return Object.entries(block.payload.tally ?? {})
+  getCountryTallyList(
+    result: CountryBlockchainResult
+  ): Array<{ country: string; count: number }> {
+    return Object.entries(result.accumulatedTally)
       .map(([country, count]) => ({ country, count }))
       .sort((a, b) => b.count - a.count);
+  }
+
+  openCountryResults(result: CountryBlockchainResult): void {
+    this.router.navigate(["/results"], {
+      queryParams: {
+        country: result.countryCode,
+        baseUrl: result.baseUrl
+      }
+    });
   }
 
   private calculateAccumulatedVoteCountsFromBlockchain(
@@ -153,7 +214,7 @@ export class ResultsComponent implements OnInit {
     return accumulated;
   }
 
-  private calculateFinalEurovisionPoints(
+  private calculateEurovisionPoints(
     accumulatedTally: Record<string, number>
   ): Record<string, number> {
     const pointsByRank = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
@@ -227,12 +288,10 @@ export class ResultsComponent implements OnInit {
       await this.p2pCryptoService.hashCanonical(block.payload);
 
     if (calculatedHash !== block.hash) {
-      console.error("Hash de bloque inválido", block);
       return false;
     }
 
     if (block.presidentPeerId !== block.payload.roles.presidentPeerId) {
-      console.error("presidentPeerId no coincide con roles", block);
       return false;
     }
 
@@ -247,7 +306,6 @@ export class ResultsComponent implements OnInit {
       );
 
     if (!presidentSignatureValid) {
-      console.error("Firma del presidente inválida", block);
       return false;
     }
 
@@ -255,7 +313,7 @@ export class ResultsComponent implements OnInit {
       return false;
     }
 
-    if (!(await this.verifyBlockApprovals(block))) {
+    if (!(await this.verifyApprovals(block))) {
       return false;
     }
 
@@ -293,14 +351,13 @@ export class ResultsComponent implements OnInit {
     );
   }
 
-  private async verifyBlockApprovals(
+  private async verifyApprovals(
     block: VotingResultBlock
   ): Promise<boolean> {
     const approvals = block.approvals ?? [];
     const peersSnapshot = block.payload.peersSnapshot ?? [];
 
     if (peersSnapshot.length < 3) {
-      console.error("El bloque no contiene peersSnapshot suficiente", block);
       return false;
     }
 
@@ -308,10 +365,6 @@ export class ResultsComponent implements OnInit {
       Math.floor(peersSnapshot.length / 2) + 1;
 
     if (approvals.length < requiredApprovals) {
-      console.error("Quórum insuficiente", {
-        approvals: approvals.length,
-        requiredApprovals
-      });
       return false;
     }
 
@@ -324,42 +377,44 @@ export class ResultsComponent implements OnInit {
 
       seenPeerIds.add(approval.signerPeerId);
 
-      const valid = await this.verifyBlockApprovalForBlock(
-        block,
-        approval
+      const approvalPayload = approval.payload;
+
+      if (approvalPayload.roundId !== block.payload.roundId) {
+        return false;
+      }
+
+      if (approvalPayload.roundNumber !== block.payload.roundNumber) {
+        return false;
+      }
+
+      if (approvalPayload.blockHash !== block.hash) {
+        return false;
+      }
+
+      if (approvalPayload.decision !== "APPROVED") {
+        return false;
+      }
+
+      const peer = peersSnapshot.find(
+        (item: any) => item.peerId === approval.signerPeerId
       );
 
-      if (!valid) {
+      if (!peer?.voterSigningPublicKey) {
+        return false;
+      }
+
+      const validSignature =
+        await this.p2pCryptoService.verifySignedP2PPayload(
+          approval,
+          peer.voterSigningPublicKey
+        );
+
+      if (!validSignature) {
         return false;
       }
     }
 
     return true;
-  }
-
-  private async verifyBlockApprovalForBlock(
-    block: VotingResultBlock,
-    approval: BlockApproval
-  ): Promise<boolean> {
-    const payload = approval.payload;
-
-    if (payload.roundId !== block.payload.roundId) return false;
-    if (payload.roundNumber !== block.payload.roundNumber) return false;
-    if (payload.blockHash !== block.hash) return false;
-    if (payload.decision !== "APPROVED") return false;
-
-    const peer = block.payload.peersSnapshot?.find(
-      (item: any) => item.peerId === approval.signerPeerId
-    );
-
-    if (!peer?.voterSigningPublicKey) {
-      return false;
-    }
-
-    return this.p2pCryptoService.verifySignedP2PPayload(
-      approval,
-      peer.voterSigningPublicKey
-    );
   }
 
   private async verifyValidBlockPayload(
@@ -404,7 +459,6 @@ export class ResultsComponent implements OnInit {
 
     for (const vote of votes) {
       const hash = await this.p2pCryptoService.hashCanonical(vote);
-
       const index = remainingHashes.indexOf(hash);
 
       if (index < 0) {
