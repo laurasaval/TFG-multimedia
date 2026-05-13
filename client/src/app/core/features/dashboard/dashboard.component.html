@@ -28,6 +28,58 @@
         {{ successMessage }}
     </div>
 
+    <!-- Ronda finalizada -->
+    <section *ngIf="roundFinished && finalizedBlock" class="round-finished-card">
+        <h2>Ronda finalizada</h2>
+
+        <p>
+            El bloque de la ronda ha sido aceptado por quórum.
+        </p>
+
+        <div class="summary-grid">
+            <div>
+                <strong>Ronda</strong>
+                <span>{{ finalizedBlock.payload.roundNumber }}</span>
+            </div>
+
+            <div>
+                <strong>Estado</strong>
+                <span>{{ finalizedBlock.payload.status }}</span>
+            </div>
+
+            <div>
+                <strong>Quórum</strong>
+                <span>
+                    {{ finalizedBlock.approvals?.length || 0 }}/{{ roundState?.peers?.length || 0 }}
+                </span>
+            </div>
+
+            <div>
+                <strong>Hash del bloque</strong>
+                <code>{{ finalizedBlock.hash }}</code>
+            </div>
+        </div>
+
+        <div *ngIf="finalizedBlock.payload.tally">
+            <h3>Conteo bruto de esta ronda</h3>
+
+            <ul>
+                <li *ngFor="let item of getBlockTallyList(finalizedBlock)">
+                    {{ item.country }}: {{ item.count }}
+                </li>
+            </ul>
+        </div>
+
+        <div class="actions">
+            <button type="button" (click)="goToResults()">
+                Ver resultados públicos
+            </button>
+            <button type="button" (click)="onLogout()">
+                Cerrar sesión
+            </button>
+        </div>
+    </section>
+
     <!-- Voting content -->
     <section *ngIf="voting" class="voting-section" aria-labelledby="voting-heading">
 

@@ -129,6 +129,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   roundFinished = false;
 
   private readonly localBlockchainStorageKey = "tfg_verified_blockchain";
+  private readonly localVoteReceiptStorageKey = "tfg_vote_receipt";
 
   constructor(
     private authService: AuthService,
@@ -310,6 +311,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
+  goToResults(): void {
+    this.router.navigate(["/results"]);
+  }
+
   openPerformanceVideo(candidate: Candidate): void {
     if (!candidate.performanceUrl) {
       this.errorMessage = `No hay vídeo disponible para ${candidate.countryName}`;
@@ -420,6 +425,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.errorMessage = error?.message ?? "No se puedo enviar el voto al secretario";
     }
+  }
+
+  getBlockTallyList(block: VotingResultBlock): Array<{ country: string; count: number }> {
+    const tally = block.payload.tally ?? {};
+
+    return Object.entries(tally)
+      .map(([country, count]) => ({
+        country,
+        count
+      }))
+      .sort((a, b) => b.count - a.count);
   }
 
   // El secreario prepara los votos para enviarselos al notario
@@ -778,6 +794,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.blockchain = [...this.blockchain, block];
 
     this.saveLocalBlockchain();
+    this.saveLocalVoteReceipt(block);
 
     await this.tryMirrorBlock(block);
 
@@ -1554,8 +1571,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return false;
       }
 
-      // TODO: revisar
-      // const tokenValidation = await this.validateTokenRoundProofs(tokenRoundProofs);
       const tokenValidation = await this.validateTokenRoundProofsForBlockVerification(
         block,
         tokenRoundProofs
@@ -2074,6 +2089,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } finally {
       this.blockchain = previousBlockchain;
     }
+  }
+
+  private saveLocalVoteReceipt(block: VotingResultBlock): void {
+    if (!this.roundState) {
+      return;
+    }
+
+    const receipt = {
+      app: "TFG_ESC_2026",
+      version: 1,
+      createdAt: new Date().toISOString(),
+
+      voterId: this.voterId,
+      peerId: this.roundState.ownPeerId,
+
+      roundId: this.roundState.roundId,
+      roundNumber: this.roundState.roundNumber,
+
+      acceptedBlockHash: block.hash
+    };
+
+    localStorage.setItem(
+      this.localVoteReceiptStorageKey,
+      JSON.stringify(receipt)
+    );
   }
 
   private buildP2PGraph(): void {

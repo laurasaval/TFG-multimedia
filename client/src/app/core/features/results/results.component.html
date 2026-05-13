@@ -1,0 +1,120 @@
+<section class="results-page">
+    <h1>Resultados finales</h1>
+
+    <button type="button" (click)="loadResults()">
+        Recargar resultados
+    </button>
+
+    <div *ngIf="loading">
+        Cargando resultados...
+    </div>
+
+    <div *ngIf="errorMessage" class="status-card status-card--error">
+        {{ errorMessage }}
+    </div>
+
+    <div *ngIf="successMessage" class="status-card status-card--success">
+        {{ successMessage }}
+    </div>
+
+    <section *ngIf="verifiedBlocks.length > 0">
+        <h2>Puntuación final</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>País</th>
+                    <th>Puntos</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of finalPointsList">
+                    <td>{{ item.country }}</td>
+                    <td>{{ item.points }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section *ngIf="verifiedBlocks.length > 0">
+        <h2>Resultado acumulado bruto</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>País</th>
+                    <th>Votos</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of accumulatedTallyList">
+                    <td>{{ item.country }}</td>
+                    <td>{{ item.count }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Blockchain verificada</h2>
+
+        <p *ngIf="localReceipt">
+            Se ha encontrado un justificante local. El bloque aceptado por este navegador
+            aparecerá resaltado.
+        </p>
+
+        <div class="chain">
+            <article *ngFor="let block of verifiedBlocksList" class="chain-block"
+                [class.chain-block--mine]="isLocalReceiptBlock(block)">
+
+                <div class="chain-block__header">
+                    <h3>
+                        Bloque #{{ block.payload.index }}
+                        <span *ngIf="isLocalReceiptBlock(block)">Tu bloque</span>
+                    </h3>
+
+                    <strong>{{ block.payload.status }}</strong>
+                </div>
+
+                <p>Ronda: {{ block.payload.roundNumber }}</p>
+                <p>Hash:</p>
+                <code>{{ block.hash }}</code>
+
+                <p>Previous hash:</p>
+                <code>{{ block.payload.previousHash }}</code>
+
+                <p>
+                    Aprobaciones:
+                    {{ block.approvals?.length || 0 }}/{{ block.payload.peersSnapshot?.length || 0 }}
+                </p>
+
+                <div *ngIf="block.payload.tally">
+                    <h4>Conteo de la ronda</h4>
+                    <ul>
+                        <li *ngFor="let item of getBlockTallyList(block)">
+                            {{ item.country }}: {{ item.count }}
+                        </li>
+                    </ul>
+                </div>
+
+                <button type="button" class="details-button" (click)="toggleBlockDetails(block.hash)">
+                    {{ isBlockExpanded(block.hash) ? 'Ocultar detalles completos' : 'Ver detalles completos' }}
+                </button>
+
+                <div *ngIf="isBlockExpanded(block.hash)" class="block-details">
+                    <h4>Payload completo</h4>
+                    <pre>{{ block.payload | json }}</pre>
+
+                    <h4>Hash</h4>
+                    <pre>{{ block.hash }}</pre>
+
+                    <h4>Firma del presidente</h4>
+                    <pre>{{ block.presidentSignatureBase64 }}</pre>
+
+                    <h4>Aprobaciones de quórum</h4>
+                    <pre>{{ block.approvals | json }}</pre>
+                </div>
+            </article>
+        </div>
+    </section>
+</section>

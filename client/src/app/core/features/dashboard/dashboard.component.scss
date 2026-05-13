@@ -2369,6 +2369,36 @@
     }
 }
 
+.round-finished-card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    margin-top: 1.5rem;
+}
+
+.summary-grid {
+    display: grid;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.summary-grid div {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.summary-grid code {
+    word-break: break-all;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
 @media (prefers-reduced-motion: no-preference) {
     .p2p-graph__node--self .p2p-graph__node-ring {
         animation: self-ring-pulse 2.2s ease-in-out infinite;

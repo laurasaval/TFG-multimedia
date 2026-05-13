@@ -1,0 +1,90 @@
+.results-page {
+    padding: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.status-card {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin: 1rem 0;
+}
+
+.status-card--success {
+    background: rgba(46, 204, 113, 0.12);
+    border: 1px solid rgba(46, 204, 113, 0.35);
+}
+
+.status-card--error {
+    background: rgba(231, 76, 60, 0.12);
+    border: 1px solid rgba(231, 76, 60, 0.35);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0 2rem;
+}
+
+th,
+td {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    text-align: left;
+}
+
+.chain {
+    display: grid;
+    gap: 1rem;
+}
+
+.chain-block {
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.chain-block--mine {
+    border-color: #ffe66d;
+    box-shadow: 0 0 0 2px rgba(255, 230, 109, 0.25);
+}
+
+.chain-block__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.chain-block h3 span {
+    margin-left: 0.5rem;
+    font-size: 0.85rem;
+    color: #ffe66d;
+}
+
+code {
+    display: block;
+    word-break: break-all;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.details-button {
+    margin-top: 1rem;
+}
+
+.block-details {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.block-details pre {
+    max-height: 420px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.8rem;
+}
