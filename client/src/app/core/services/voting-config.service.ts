@@ -1,14 +1,14 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { firstValueFrom } from "rxjs";
-import { API_CONFIG } from "../config/api.config";
+import { API_CONFIG, getApiBaseUrl } from "../config/api.config";
 import { VotingConfig, VotingConfigResponse } from "../../shared/models/voting-config.models";
 
 @Injectable({
     providedIn: "root"
 })
 export class VotingConfigService {
-    private readonly apiUrl = `${API_CONFIG.BASE_URL}/voting-config`;
+    private readonly apiUrl = `${getApiBaseUrl()}/voting-config`;
 
     constructor(private http: HttpClient) { }
 

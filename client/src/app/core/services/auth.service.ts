@@ -3,7 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable, tap } from "rxjs";
 
 import { LoginRequest, LoginResponse } from "../../shared/models/auth.models";
-import { API_CONFIG } from "../config/api.config";
+import { API_CONFIG, getApiBaseUrl } from "../config/api.config";
 import { SessionService } from "./session.service";
 import { TokenService } from "./token.service";
 
@@ -21,7 +21,7 @@ export class AuthService {
 
     login(payload: LoginRequest): Observable<LoginResponse> {
         return this.http
-            .post<LoginResponse>(`${this.apiUrl}/login`, payload)
+            .post<LoginResponse>(`${getApiBaseUrl()}/auth/login`, payload)
             .pipe(
                 tap((response) => {
                     if (response.ok && response.session) {

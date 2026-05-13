@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { firstValueFrom } from "rxjs";
 
-import { API_CONFIG } from "../config/api.config";
+import { API_CONFIG, getApiBaseUrl } from "../config/api.config";
 
 import { VoterKeyService } from "./voter-key.service";
 import { IdentityKeyService } from "./identity-key.service";
@@ -19,7 +19,7 @@ import { Voter } from "../../shared/models/auth.models";
 })
 export class TokenService {
     private readonly storageKey: string = "tfg_vote_token";
-    private readonly apiUrl: string = `${API_CONFIG.BASE_URL}/token`;
+    private readonly apiUrl: string = `${getApiBaseUrl()}/token`;
 
     constructor(
         private http: HttpClient,

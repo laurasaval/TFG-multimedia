@@ -111,6 +111,9 @@ export class LoginComponent {
       return;
     }
 
+    const country = this.voterId.split("-")[0];
+    localStorage.setItem("tfg_country", country);
+
     this.authService.login(payload).subscribe({
       next: async (response) => {
         try {
