@@ -255,11 +255,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // TODO: Eliminar
-  sendTestP2PMessage(): void {
-    this.p2pNetworkService.broadcastTestMessage();
-  }
-
   prepareVote(): void {
     if (this.selectedCountries.length === 0) { return; }
 

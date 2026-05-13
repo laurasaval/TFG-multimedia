@@ -78,17 +78,6 @@ export class P2PNetworkService {
             });
     }
 
-    // TODO: eliminar
-    broadcastTestMessage(): void {
-        this.webRTCService.broadcast({
-            type: "P2P_TEST",
-            payload: {
-                text: "Hola desde WebRTC!",
-                sentAt: new Date().toISOString()
-            }
-        });
-    }
-
     sendToPeer(peerId: string, data: any): void {
         this.webRTCService.sendToPeer(peerId, data);
     }
