@@ -53,7 +53,12 @@
     "demo-clean:fr": "node scripts/demo-clean.js fr",
     "demo-clean:de": "node scripts/demo-clean.js de",
     "demo-clean:pt": "node scripts/demo-clean.js pt",
-    "demo-clean:it": "node scripts/demo-clean.js it"
+    "demo-clean:it": "node scripts/demo-clean.js it",
+    "demo-voters:es:30": "node scripts/demo-voters.js es 30",
+    "demo-voters:fr:30": "node scripts/demo-voters.js fr 30",
+    "demo-voters:de:30": "node scripts/demo-voters.js de 30",
+    "demo-voters:pt:30": "node scripts/demo-voters.js pt 30",
+    "demo-voters:it:30": "node scripts/demo-voters.js it 30"
   },
   "dependencies": {
     "argon2": "^0.44.0",

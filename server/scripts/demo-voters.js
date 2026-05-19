@@ -14,48 +14,53 @@ const voterKeyPath = (country, filename) => {
     return path.resolve(PROJECT_ROOT, "keys", "voters", country, filename);
 };
 
-const voters = [
-    {
-        country: "es",
-        webUser: "Persona 1",
-        voterId: "es-1",
+const country = (process.argv[2] || "es").toLowerCase();
+const voterCount = Number(process.argv[3] || 5);
+
+if (!Number.isInteger(voterCount) || voterCount <= 0) {
+    throw new Error("El número de votantes debe ser un entero positivo");
+}
+
+const AVAILABLE_COUNTRIES = ["ES", "FR", "DE", "IT", "PT"];
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function shuffleArray(array) {
+    return [...array].sort(() => Math.random() - 0.5);
+}
+
+function getRandomVoteFor(voterCountry) {
+    const normalizedVoterCountry = voterCountry.toUpperCase();
+
+    // Evita que un país se vote a sí mismo.
+    const eligibleCountries = AVAILABLE_COUNTRIES.filter(
+        (candidateCountry) => candidateCountry !== normalizedVoterCountry
+    );
+
+    // Cada votante vota aleatoriamente entre 1 y 3 países.
+    const numberOfVotes = getRandomInt(1, Math.min(3, eligibleCountries.length));
+
+    return shuffleArray(eligibleCountries).slice(0, numberOfVotes);
+}
+
+const voters = Array.from({ length: voterCount }, (_, index) => {
+    const voterNumber = index + 1;
+    const voterId = `${country}-${voterNumber}`;
+
+    return {
+        country,
+        webUser: `${country.toUpperCase()} Usuario ${voterNumber}`,
+        voterId,
         secretCode: "TFG_Pass_Segura6983985()·$=",
-        identityPrivateKeyPath: voterKeyPath("es", "es-1_private.pem"),
-        voteFor: ["FR", "IT"]
-    },
-    {
-        country: "es",
-        webUser: "Usuario 2",
-        voterId: "es-2",
-        secretCode: "TFG_Pass_Segura6983985()·$=",
-        identityPrivateKeyPath: voterKeyPath("es", "es-2_private.pem"),
-        voteFor: ["FR"]
-    },
-    {
-        country: "es",
-        webUser: "Usuario 3",
-        voterId: "es-3",
-        secretCode: "TFG_Pass_Segura6983985()·$=",
-        identityPrivateKeyPath: voterKeyPath("es", "es-3_private.pem"),
-        voteFor: ["DE", "IT"]
-    },
-    {
-        country: "es",
-        webUser: "Usuario 4",
-        voterId: "es-4",
-        secretCode: "TFG_Pass_Segura6983985()·$=",
-        identityPrivateKeyPath: voterKeyPath("es", "es-4_private.pem"),
-        voteFor: ["FR", "DE", "PT"]
-    },
-    {
-        country: "es",
-        webUser: "Usuario 5",
-        voterId: "es-5",
-        secretCode: "TFG_Pass_Segura6983985()·$=",
-        identityPrivateKeyPath: voterKeyPath("es", "es-5_private.pem"),
-        voteFor: ["FR", "PT"]
-    },
-];
+        identityPrivateKeyPath: voterKeyPath(
+            country,
+            `${voterId}_private.pem`
+        ),
+        voteFor: getRandomVoteFor(country)
+    };
+});
 
 function assertFileExists(filePath) {
     if (!fs.existsSync(filePath)) {
